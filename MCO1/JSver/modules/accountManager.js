@@ -13,8 +13,12 @@ function registerAccount(rl, callBack){
     });
 }
 
+function getAccount(name) {
+    return accounts.find(account => account.name === name);
+}
+
 module.exports = {
     registerAccount: registerAccount,
-    accounts: accounts
+    getAccount: getAccount
 };
 
