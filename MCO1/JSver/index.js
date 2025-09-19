@@ -24,7 +24,7 @@ function mainMenu() {
     rl.question('Enter your choice: ', (choice) => {
         switch (choice) {
             case "1":
-                //accountManager.registerAccount();
+                accountManager.registerAccount();
                 mainMenu(); // Call mainMenu again to loop back
                 break;
             case "2":
