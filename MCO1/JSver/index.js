@@ -4,59 +4,63 @@ const currencyExchange = require('./modules/currencyExchange');
 const interestCalculator = require('./modules/interestCalculator');
 const readline = require('readline');
 
-// Create an interface for reading input from the console
+// Create a single interface for reading input from the console.
 const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
+  input: process.stdin,
+  output: process.stdout
 });
 
 function mainMenu() {
-    console.log("Welcome to the Main Menu\n");
-    console.log("Please select an option:\n");
-    console.log("1. Register Account Name\n");
-    console.log("2. Deposit Amount\n");
-    console.log("3. Withdraw Amount\n");
-    console.log("4. Currency Exchange\n");
-    console.log("5. Record Exchange Rates\n");
-    console.log("6. Show Interest Record\n");
-    console.log("7. Exit\n");
+  const menu = `
+Welcome to the Main Menu
 
-    rl.question('Enter your choice: ', (choice) => {
-        switch (choice) {
-            case "1":
-                accountManager.registerAccount();
-                mainMenu(); // Call mainMenu again to loop back
-                break;
-            case "2":
-                //transactionHandler.depositAmount();
-                mainMenu(); // Call mainMenu again to loop back
-                break;
-            case "3":
-                //transactionHandler.withdrawAmount();
-                mainMenu(); // Call mainMenu again to loop back
-                break;
-            case "4":
-                //currencyExchange.currencyExchange();
-                mainMenu(); // Call mainMenu again to loop back
-                break;
-            case "5":
-                //currencyExchange.recordExchangeRates();
-                mainMenu(); // Call mainMenu again to loop back
-                break;
-            case "6":
-                //interestCalculator.showInterestRecord();
-                mainMenu(); // Call mainMenu again to loop back
-                break;
-            case "7":
-                console.log("Exiting the application. Goodbye!");
-                rl.close(); // Close the readline interface
-                break;
-            default:
-                console.log("Invalid choice. Please try again.");
-                mainMenu(); // Call mainMenu again to loop back
-                break;
-        }
-    });
+Please select an option:
+
+1. Register Account Name
+2. Deposit Amount
+3. Withdraw Amount
+4. Currency Exchange
+5. Record Exchange Rates
+6. Show Interest Record
+7. Exit
+`;
+
+  console.log(menu);
+
+  rl.question('Enter your choice: ', (choice) => {
+    switch (choice.trim()) { // Use .trim() to remove whitespace
+      case "1":
+        accountManager.registerAccount(rl, mainMenu);
+        break;
+      case "2":
+        // transactionHandler.depositAmount();
+        mainMenu();
+        break;
+      case "3":
+        // transactionHandler.withdrawAmount();
+        mainMenu();
+        break;
+      case "4":
+        // currencyExchange.currencyExchange();
+        mainMenu();
+        break;
+      case "5":
+        // currencyExchange.recordExchangeRates();
+        mainMenu();
+        break;
+      case "6":
+        // interestCalculator.showInterestRecord();
+        mainMenu();
+        break;
+      case "7":
+        console.log("Exiting the application. Goodbye!");
+        rl.close(); // Close the readline interface and exit the process
+        break;
+      default:
+        console.log("Invalid choice. Please try again.");
+        mainMenu();
+    }
+  });
 }
 
 // Start the application by calling the main menu for the first time

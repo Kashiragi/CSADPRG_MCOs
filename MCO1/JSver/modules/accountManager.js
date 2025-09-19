@@ -1,12 +1,6 @@
-const readline = require('readline');
 var accounts = [];
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-function registerAccount(){
+function registerAccount(rl, callBack){
     console.log("Register Account Name");
     rl.question("Account Name: ", function(accountName) {
         const newAccount = { 
@@ -15,7 +9,7 @@ function registerAccount(){
         };
         accounts.push(newAccount);
         console.log(`Account "${accountName}" registered successfully.`);
-        rl.close(); // Close the readline interface
+        callBack();
     });
 }
 
