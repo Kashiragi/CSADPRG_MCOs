@@ -2,7 +2,7 @@
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
-Kotlin/.idea/*
+MCO1/Kotlin/.idea/
 Kotline.iml
 # Default ignored files
 /shelf/
