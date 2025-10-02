@@ -14,6 +14,7 @@ app_state$exchange_rate <- list(PHP = 1.00,
                                 EUR = 60.00,
                                 CNY = 7.50)
 
+
 #----------------------------------------------------------------------------------------------------------------
 
 #helper Functions
@@ -34,6 +35,7 @@ num_input <- function(answer){
   }
 }
 
+
 #----------------------------------------------------------------------------------------------------------------
 
 #Main menu functions
@@ -42,46 +44,8 @@ reg_acc <- function(){
   back <- TRUE
   
   while(back){
-     cat('Register Account Name\n')
-     app_state$acc_name <- user_input('Account Name: ')
-     back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
-     
-     if(back_main == 'Y'){
-       back <- FALSE
-       cat('Going Back To Main\n')
-     }else if(back_main == 'N'){
-       
-     }
-     else{
-       cat('Invalid input!\n')
-       back_main <- user_input('Back to the Main Menu (Y/N): ')
-       back <- FALSE
-     }
-  }
-}
-
-#[2]Deposit Amount
-dep_amount <- function(){
-  back <- TRUE
-  
-  while(back){
-    cat('Deposit Amount\n')
-    cat(sprintf("Account Name: %s\n", app_state$acc_name))
-    cat(sprintf("Current Balance: %.2f\n", app_state$acc_balance))
-    
-    currency <- toupper(user_input('Currency: '))
-    
-    dep_am <- num_input('Deposit Amount: ')
-    if (dep_am <= 0) {
-      cat("\nDeposit cancelled. Amount must be greater than zero.\n")
-      return()
-    }
-    
-    to_php <- app_state$exchange_rate[[currency]]
-    amount <- dep_am * to_php
-    
-    app_state$acc_balance <- app_state$acc_balance + amount
-    cat(sprintf("Updated Balance: %.2f\n", app_state$acc_balance))
+    cat('Register Account Name\n')
+    app_state$acc_name <- user_input('Account Name: ')
     back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
     
     if(back_main == 'Y'){
@@ -94,6 +58,124 @@ dep_amount <- function(){
       cat('Invalid input!\n')
       back_main <- user_input('Back to the Main Menu (Y/N): ')
       back <- FALSE
+    }
+  }
+}
+
+#[2]Deposit Amount
+dep_amount <- function(){
+  
+  if(app_state$acc_name == 'N/A'){
+    cat('Register an account first!\n\n')
+    return()
+  }
+  else{
+    back <- TRUE
+    main
+    while(back){
+      cat('Deposit Amount\n')
+      cat(sprintf("Account Name: %s\n", app_state$acc_name))
+      cat(sprintf("Current Balance: %.2f\n", app_state$acc_balance))
+      
+      currency <- toupper(user_input('Currency: '))
+      cat('\n')
+      codes <- names(app_state$exchange_rate)
+      currency_exists <- FALSE
+      for(i in 1:length(codes)){
+        if(currency == codes[i]){
+          currency_exists <- TRUE
+        } 
+      }
+      
+      if(currency_exists){
+        dep_am <- num_input('Deposit Amount: ')
+        if (dep_am <= 0) {
+          cat("\nDeposit cancelled. Amount must be greater than zero.\n")
+          return()
+        }
+        
+        to_php <- app_state$exchange_rate[[currency]]
+        amount <- dep_am * to_php
+        cat(sprintf("Depositing %.2f PHP\n", amount))
+        app_state$acc_balance <- app_state$acc_balance + amount
+        cat(sprintf("Updated Balance: %.2f\n", app_state$acc_balance))
+        back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
+        
+        if(back_main == 'Y'){
+          back <- FALSE
+          cat('Going Back To Main\n')
+        }else if(back_main == 'N'){
+          
+        }
+        else{
+          cat('Invalid input!\n\n')
+          back_main <- user_input('Back to the Main Menu (Y/N): ')
+          back <- FALSE
+        }
+      }
+      else{
+        cat('Invalid input, type the proper curency options\n')
+        cat('PHP, USD, JPY, GBP, EUR, CYN\n\n')
+      }
+    }
+  }
+}
+
+#[3] Withdraw Amount
+with_amount <- function(){
+  
+  if(app_state$acc_name == 'N/A'){
+    cat('Register an account first!\n\n')
+    return()
+  }
+  else{
+    back <- TRUE
+    main
+    while(back){
+      cat('Withdraw Amount\n')
+      cat(sprintf("Account Name: %s\n", app_state$acc_name))
+      cat(sprintf("Current Balance: %.2f\n", app_state$acc_balance))
+      
+      currency <- toupper(user_input('Currency: '))
+      cat('\n')
+      codes <- names(app_state$exchange_rate)
+      currency_exists <- FALSE
+      for(i in 1:length(codes)){
+        if(currency == codes[i]){
+          currency_exists <- TRUE
+        } 
+      }
+      
+      if(currency_exists){
+        with_am <- num_input('Widthdraw Amount: ')
+        if (with_am  > app_state$acc_balance) {
+          cat("\nWithdraw cancelled. You do not have enough balance in your account.\n")
+          return()
+        }
+        
+        to_php <- app_state$exchange_rate[[currency]]
+        amount <- with_am * to_php
+        cat(sprintf("Withdrawing %.2f PHP\n", amount))
+        app_state$acc_balance <- app_state$acc_balance - amount
+        cat(sprintf("Updated Balance: %.2f\n", app_state$acc_balance))
+        back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
+        
+        if(back_main == 'Y'){
+          back <- FALSE
+          cat('Going Back To Main\n')
+        }else if(back_main == 'N'){
+          
+        }
+        else{
+          cat('Invalid input!\n\n')
+          back_main <- user_input('Back to the Main Menu (Y/N): ')
+          back <- FALSE
+        }
+      }
+      else{
+        cat('Invalid input, type the proper curency options\n')
+        cat('PHP, USD, JPY, GBP, EUR, CYN\n\n')
+      }
     }
   }
 }
@@ -117,17 +199,18 @@ main <- function(){
     answer <- user_input('Enter Choice: ')
     
     switch (answer,
-      "1" = reg_acc(),
-      "2" = dep_amount(),
-      "3" = cat('you entered [3] Withdraw Amount\n'),
-      "4" = cat('you entered [4] Currency Exchange\n'),
-      "5" = cat('you entered [5] Recormad Exchange Rates\n'),
-      "6" = cat('you entered [6] Show Interest Computation\n'),
-      {
-        cat("\nInvalid choice. Please enter a number from 1 to 6.\n")
-        running <- FALSE
-      }
+            "1" = reg_acc(),
+            "2" = dep_amount(),
+            "3" = with_amount(),
+            "4" = cat('you entered [4] Currency Exchange\n'),
+            "5" = cat('you entered [5] Recormad Exchange Rates\n'),
+            "6" = cat('you entered [6] Show Interest Computation\n'),
+            {
+              cat("\nInvalid choice. Please enter a number from 1 to 6.\n")
+              running <- FALSE
+            }
     )
     
   }
 }
+
