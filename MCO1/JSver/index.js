@@ -34,22 +34,18 @@ Please select an option:
         break;
       case "2":
         transactionHandler.deposit(rl, mainMenu);
-        mainMenu();
         break;
       case "3":
         transactionHandler.withdraw(rl, mainMenu);
         break;
       case "4":
-        // currencyExchange.currencyExchange();
-        mainMenu();
+        //currencyExchange.currencyExchange(rl, mainMenu);
         break;
       case "5":
-        // currencyExchange.recordExchangeRates();
-        mainMenu();
+        //currencyExchange.recordExchangeRates(rl, mainMenu);
         break;
       case "6":
-        // interestCalculator.showInterestRecord();
-        mainMenu();
+        //interestCalculator.showInterestRecord(rl, mainMenu);
         break;
       case "7":
         console.log("Exiting the application. Goodbye!");
