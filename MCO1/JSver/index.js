@@ -33,12 +33,11 @@ Please select an option:
         accountManager.registerAccount(rl, mainMenu);
         break;
       case "2":
-        // transactionHandler.depositAmount();
+        transactionHandler.deposit(rl, mainMenu);
         mainMenu();
         break;
       case "3":
-        // transactionHandler.withdrawAmount();
-        mainMenu();
+        transactionHandler.withdraw(rl, mainMenu);
         break;
       case "4":
         // currencyExchange.currencyExchange();
