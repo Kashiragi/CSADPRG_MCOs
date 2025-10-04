@@ -5,6 +5,7 @@ class Account(val name: String, var balance: Double){ }
 
 fun registerAccount(): Account{
     println("Please input your name: ")
+    //todo:try-catch the input
     val inputName: String = readln();
     val acc = Account(inputName.toString(), 0.0)
     return acc
@@ -21,6 +22,7 @@ fun mainMenu(): Int {
                 "[6] Show Interest Computation \n" +
                 "[7] Leave \n"
     )
+    //todo:try-catch the input
     val initial = readln().toInt() // try-catch for non-Int
     return if (initial in 1..7) {
         initial
@@ -36,6 +38,7 @@ fun depositToAccount(acc: Account?){
             " \n" +
             "Deposit Amount: "
         )
+        //todo:try-catch the input
         var amt = readln().toDouble()
 
         acc.balance += amt
@@ -56,6 +59,7 @@ fun withdrawFromAccount(acc: Account?){
             " \n" +
             "Withdraw Amount: "
         )
+        //todo:try-catch the input
         var amt = readln().toDouble()
 
         acc.balance -= amt
@@ -79,6 +83,7 @@ fun dispInterest(acc: Account?) {
                 "Currency: PHP \n" +
                 "Interest Rate: 5% \n" +
                 "Total Number of Days: ")
+        //todo:try-catch the input
         var days = readln().toInt()
         var interest = computeDailyInterest(acc.balance)
         var bal = acc.balance
@@ -92,6 +97,31 @@ fun dispInterest(acc: Account?) {
     } ?: run { println("No account indicated.")}
 
 
+}
+fun recordExchangeRate(rates: MutableMap<String, Double>){
+    // select currency to add rate
+    print("Record Exchange Rate \n" +
+            " \n" +
+            "[1] Philippine Peso (PHP) \n" +
+            "[2] United States Dollar (USD) \n" +
+            "[3] Japanese Yen (JPY) \n" +
+            "[4] British Pound Sterling (GBP) \n" +
+            "[5] Euro (EUR) \n" +
+            "[6] Chinese Yuan Renminni (CNY) \n" +
+            " \n" +
+            "Select Foreign Currency: ")
+    //todo:try-catch the input/s
+    var choice = readln().toInt()
+    print("Exchange Rate: ")
+    var recordedRate = readln().toDouble()
+    when(choice){
+        1 -> rates.put("1", recordedRate)
+        2 -> rates.put("2", recordedRate)
+        3 -> rates.put("3", recordedRate)
+        4 -> rates.put("4", recordedRate)
+        5 -> rates.put("5", recordedRate)
+        6 -> rates.put("6", recordedRate)
+    }
 }
 fun main() {
 //    println("Hello World")
