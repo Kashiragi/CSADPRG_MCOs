@@ -1,10 +1,8 @@
-class Account(val name: String, var balance: Double){
-    // deposit function
-    //withdraw function
-    init {
-        println(this.name + " " + this.balance)
-    }
-}
+import java.math.RoundingMode
+import java.text.DecimalFormat
+
+class Account(val name: String, var balance: Double){ }
+
 fun registerAccount(): Account{
     println("Please input your name: ")
     val inputName: String = readln();
@@ -23,7 +21,7 @@ fun mainMenu(): Int {
                 "[6] Show Interest Computation \n" +
                 "[7] Leave \n"
     )
-    val initial = readln().toInt()
+    val initial = readln().toInt() // try-catch for non-Int
     return if (initial in 1..7) {
         initial
     } else 7
@@ -67,6 +65,34 @@ fun withdrawFromAccount(acc: Account?){
         println("No account indicated.")
     }
 }
+
+fun computeDailyInterest(currAmt: Double): Double {
+    var dailyRate = 0.05 / 365;
+    return currAmt * dailyRate
+}
+
+fun dispInterest(acc: Account?) {
+    acc?.let { account ->
+        print("Show Interest Amount \n" +
+                "Account Name: ${acc.name} \n" +
+                "Current Balance: ${acc.balance} \n" +
+                "Currency: PHP \n" +
+                "Interest Rate: 5% \n" +
+                "Total Number of Days: ")
+        var days = readln().toInt()
+        var interest = computeDailyInterest(acc.balance)
+        var bal = acc.balance
+        val df = DecimalFormat("#.##")
+        df.roundingMode = RoundingMode.CEILING
+        println("Day  \t| Interest \t| Balance |")
+        for (i in 1..days){
+            bal += interest
+            println("$i  \t\t| ${df.format(interest)}  \t| ${df.format(bal)} |")
+        }
+    } ?: run { println("No account indicated.")}
+
+
+}
 fun main() {
 //    println("Hello World")
     var acc: Account? = null
@@ -82,6 +108,7 @@ fun main() {
                 depositToAccount(acc)
             }
             3 -> withdrawFromAccount(acc)
+            6 -> dispInterest(acc)
         }
 
     }
