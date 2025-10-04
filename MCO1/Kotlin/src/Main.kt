@@ -1,3 +1,17 @@
+class Account(val name: String, var balance: Double){
+    // deposit function
+    //withdraw function
+    init {
+        println(this.name + " " + this.balance)
+    }
+}
+fun registerAccount(): Account{
+    println("Please input your name: ")
+    val inputName: String = readln();
+    val acc = Account(inputName.toString(), 0.0)
+    return acc
+}
+
 fun mainMenu(): Int {
     print(
         "Select Transaction: \n" +
@@ -14,6 +28,45 @@ fun mainMenu(): Int {
         initial
     } else 7
 }
+fun depositToAccount(acc: Account?){
+    acc?.let { account ->
+        print(
+            "Deposit Amount \n" +
+            "Account Name: ${acc.name} \n" +
+            "Current Balance: ${acc.balance} \n" +
+            "Currency: PHP \n" +
+            " \n" +
+            "Deposit Amount: "
+        )
+        var amt = readln().toDouble()
+
+        acc.balance += amt
+
+        print("Updated Balance: ${acc.balance} \n\n")
+    } ?: run {
+        println("No account indicated.")
+    }
+}
+
+fun withdrawFromAccount(acc: Account?){
+    acc?.let { account ->
+        print(
+            "Withdraw Amount \n" +
+            "Account Name: ${acc.name} \n" +
+            "Current Balance: ${acc.balance} \n" +
+            "Currency: PHP \n" +
+            " \n" +
+            "Withdraw Amount: "
+        )
+        var amt = readln().toDouble()
+
+        acc.balance -= amt
+
+        print("Updated Balance: ${acc.balance} \n\n")
+    } ?: run {
+        println("No account indicated.")
+    }
+}
 fun main() {
 //    println("Hello World")
     var acc: Account? = null
@@ -23,12 +76,12 @@ fun main() {
             1 -> {
                 if(acc == null)
                     acc = registerAccount()
-                else println("An account has already been logged in: ${acc.accName}. Cannot register a new one.")
+                else println("An account has already been logged in: ${acc.name}. Cannot register a new one.")
             }
-//            2 -> {
-//                var depAmt = getDepositValue()
-//                acc?.deposit(depAmt) ?: println("Transaction Failed: Cannot deposit $depAmt")
-//            }
+            2 -> {
+                depositToAccount(acc)
+            }
+            3 -> withdrawFromAccount(acc)
         }
 
     }
