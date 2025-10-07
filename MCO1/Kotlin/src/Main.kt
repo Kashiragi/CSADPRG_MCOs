@@ -12,7 +12,18 @@ fun registerAccount(): Account? {
     }
     return null
 }
-
+fun returnToMain(): Boolean {
+    print("\nBack to the Main Menu (Y/N): ")
+    val choice = readln().uppercase()
+    if(choice=="Y") {
+        return true
+    } else if (choice=="N") {
+        return false
+    } else {
+        println("Invalid input. Leaving program.")
+        return false
+    }
+}
 fun mainMenu(): Int? {
     print(
         "Select Transaction: \n" +
@@ -21,8 +32,7 @@ fun mainMenu(): Int? {
                 "[3] Withdraw Amount \n" +
                 "[4] Currency Exchange \n" +
                 "[5] Record Exchange Rates \n" +
-                "[6] Show Interest Computation \n" +
-                "[7] Leave \n"
+                "[6] Show Interest Computation \n"
     )
     //todo:try-catch the input
     val initial = readln()?.toIntOrNull() // try-catch for non-Int
@@ -89,7 +99,6 @@ fun dispInterest(acc: Account?) {
                 "Currency: PHP \n" +
                 "Interest Rate: 5% \n" +
                 "Total Number of Days: ")
-        //todo:try-catch the input
         var days = readln().toIntOrNull()
         days.let{
             var interest = computeDailyInterest(acc.balance)
@@ -121,12 +130,12 @@ fun recordExchangeRate(rates: MutableMap<Int, Double>) {
     var choice = readln().toInt()
     print("Exchange Rate: ")
     var recordedRate: Double? = readln().toDoubleOrNull()
-    if (choice !in 1..6 && recordedRate == null) {
+    if (choice !in 1..6 && recordedRate == null) { // or, not and
         println("Please recheck your inputs.")
         return
     }
     when (choice) {
-        1 -> recordedRate?.let { rates.put(1, it) }
+        1 -> recordedRate?.let { rates.put(1, it) } //run block to show invalid exchange rate
         2 -> recordedRate?.let { rates.put(2, it) }
         3 -> recordedRate?.let { rates.put(3, it) }
         4 -> recordedRate?.let { rates.put(4, it) }
@@ -157,7 +166,7 @@ fun getGoalCurrency(): Int{
             "[5] Euro (EUR) \n" +
             "[6] Chinese Yuan Renminni (CNY) \n" +
             " \n" +
-            "Source Currency: ")
+            "Source Currency: ") //exchange currency
     var goalChoice = readln().toInt()
     return goalChoice
 }
@@ -191,6 +200,7 @@ fun exchangeCurrency(rates: MutableMap<Int, Double>){
 fun main() {
 //    println("Hello World")
     var acc: Account? = null
+    var leaveProgram: Boolean = true
     var ratesMap = mutableMapOf<Int, Double>()
     do{
         var choice = mainMenu()
@@ -199,17 +209,29 @@ fun main() {
                 if(acc == null)
                     acc = registerAccount()
                 else println("An account has already been logged in: ${acc.name}. Cannot register a new one.")
+                leaveProgram = returnToMain()
             }
             2 -> {
                 depositToAccount(acc)
+                leaveProgram = returnToMain()
             }
-            3 -> withdrawFromAccount(acc)
-            4 -> exchangeCurrency(ratesMap)
-            5 -> recordExchangeRate(ratesMap)
-            6 -> dispInterest(acc)
+            3 -> {
+                withdrawFromAccount(acc)
+                leaveProgram = returnToMain()
+            }
+            4 -> {
+                exchangeCurrency(ratesMap)
+                leaveProgram = returnToMain()
+            }
+            5 -> {
+                recordExchangeRate(ratesMap)
+                leaveProgram = returnToMain()
+            }
+            6 -> {
+                dispInterest(acc)
+                leaveProgram = returnToMain()
+            }
         }
-
     }
-    while(choice!=7)
-
+    while(leaveProgram)
 }
