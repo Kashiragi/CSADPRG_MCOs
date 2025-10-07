@@ -41,7 +41,7 @@ fun mainMenu(): Int? {
     } else 7
 }
 fun depositToAccount(acc: Account?){
-    val amt: Double? = (acc?.balance)
+    val bal: Double? = (acc?.balance)
     acc?.let { account ->
         print(
             "Deposit Amount \n" +
@@ -55,8 +55,12 @@ fun depositToAccount(acc: Account?){
 
         if(amt==null)
             println("Invalid input")
-        else amt = amt?.plus(amt)
-
+        else {
+            amt = bal?.plus(amt)
+            if (amt != null) {
+                acc.balance = amt
+            }
+        }
         print("Updated Balance: ${acc.balance} \n\n")
     } ?: run {
         println("No account indicated.")
@@ -64,7 +68,7 @@ fun depositToAccount(acc: Account?){
 }
 
 fun withdrawFromAccount(acc: Account?){
-    val amt: Double? = acc?.balance
+    val bal: Double? = acc?.balance
     acc?.let { account ->
         print(
             "Withdraw Amount \n" +
@@ -78,8 +82,12 @@ fun withdrawFromAccount(acc: Account?){
 
         if(amt==null)
             println("Invalid input")
-        else amt = amt?.minus(amt)
-
+        else {
+            amt = bal?.minus(amt)
+            if (amt != null) {
+                acc.balance = amt
+            }
+        }
         print("Updated Balance: ${acc.balance} \n\n")
     } ?: run {
         println("No account indicated.")
