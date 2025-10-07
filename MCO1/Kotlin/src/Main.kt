@@ -170,10 +170,10 @@ fun exchangeCurrency(rates: MutableMap<Int, Double>){
     print("\n")
     var goalChoice = getGoalCurrency()
 
-    if (srcChoice==goalChoice){
-        println("Cannot select the same currency for exchange.")
-    } else if(srcChoice !in 1..6 && goalChoice !in 1..6){
+    if(srcChoice !in 1..6 && goalChoice !in 1..6) {
         println("Invalid currencies selected.")
+    } else if (srcChoice==goalChoice){
+        println("Cannot select the same currency for exchange.")
     } else if(goalChoice==1){
         //to PHP
         converted = srcAmt * (rates[srcChoice] ?: 0.0)
