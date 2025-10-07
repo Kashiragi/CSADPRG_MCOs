@@ -1,5 +1,11 @@
 const accountManager = require('./accountManager');
 
+function calculateInterest(balance) {
+    const annualRate = 0.05; // 5% per annum
+    const dailyRate = annualRate / 365;
+    return balance * dailyRate;
+}
+
 function showInterestRecord(rl, mainMenu) {
     console.log("Show Interest Amount");
     
@@ -31,13 +37,11 @@ function showInterestRecord(rl, mainMenu) {
         console.log("--------------------------------------------");
         
         let currentBalance = account.balance;
-        const annualRate = 0.05; // 5% per annum
-        const dailyRate = annualRate / 365;
         
         // Calculate and display daily interest for each day
         for (let day = 1; day <= days; day++) {
-            const dailyInterest = currentBalance * dailyRate;
-            currentBalance += dailyInterest;
+            const dailyInterest = parseFloat(calculateInterest(currentBalance).toFixed(2));
+            currentBalance = parseFloat((currentBalance + dailyInterest).toFixed(2));
             
             console.log(`${day}\t|\t${dailyInterest.toFixed(2)}\t|\t${currentBalance.toFixed(2)}\t|`);
         }
