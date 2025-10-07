@@ -98,7 +98,7 @@ fun dispInterest(acc: Account?) {
 
 
 }
-fun recordExchangeRate(rates: MutableMap<String, Double>){
+fun recordExchangeRate(rates: MutableMap<Int, Double>){
     // select currency to add rate
     print("Record Exchange Rate \n" +
             " \n" +
@@ -115,18 +115,70 @@ fun recordExchangeRate(rates: MutableMap<String, Double>){
     print("Exchange Rate: ")
     var recordedRate = readln().toDouble()
     when(choice){
-        1 -> rates.put("1", recordedRate)
-        2 -> rates.put("2", recordedRate)
-        3 -> rates.put("3", recordedRate)
-        4 -> rates.put("4", recordedRate)
-        5 -> rates.put("5", recordedRate)
-        6 -> rates.put("6", recordedRate)
+        1 -> rates.put(1, recordedRate)
+        2 -> rates.put(2, recordedRate)
+        3 -> rates.put(3, recordedRate)
+        4 -> rates.put(4, recordedRate)
+        5 -> rates.put(5, recordedRate)
+        6 -> rates.put(6, recordedRate)
+    }
+}
+fun getSourceCurrency(): Int{
+    print("Source Currency Option: \n" +
+            "[1] Philippine Peso (PHP) \n" +
+            "[2] United States Dollar (USD) \n" +
+            "[3] Japanese Yen (JPY) \n" +
+            "[4] British Pound Sterling (GBP) \n" +
+            "[5] Euro (EUR) \n" +
+            "[6] Chinese Yuan Renminni (CNY) \n" +
+            " \n" +
+            "Source Currency: ")
+    var srcChoice = readln().toInt()
+    return srcChoice
+}
+fun getGoalCurrency(): Int{
+    print("Exchanged Currency Option: \n" +
+            "[1] Philippine Peso (PHP) \n" +
+            "[2] United States Dollar (USD) \n" +
+            "[3] Japanese Yen (JPY) \n" +
+            "[4] British Pound Sterling (GBP) \n" +
+            "[5] Euro (EUR) \n" +
+            "[6] Chinese Yuan Renminni (CNY) \n" +
+            " \n" +
+            "Source Currency: ")
+    var goalChoice = readln().toInt()
+    return goalChoice
+}
+fun exchangeCurrency(rates: MutableMap<Int, Double>){
+    print("Foreign Currency Exchange")
+    var srcChoice = getSourceCurrency()
+    print("Source Amount: ")
+    var srcAmt = readln().toDouble()
+    var converted: Double = 0.0
+    print("\n")
+    var goalChoice = getGoalCurrency()
+
+    if (srcChoice==goalChoice){
+        println("Cannot select the same currency for exchange.")
+    } else if(srcChoice !in 1..6 && goalChoice !in 1..6){
+        println("Invalid currencies selected.")
+    } else if(goalChoice==1){
+        //to PHP
+        converted = srcAmt * (rates[srcChoice] ?: 0.0)
+        println("Exchange Amount: $converted")
+    } else if (srcChoice==1) {
+        //from PHP
+        converted = srcAmt / (rates[goalChoice] ?: 0.0)
+        println("Exchange Amount: $converted")
+    } else {
+        var toPhp = srcAmt * (rates[srcChoice] ?: 0.0)
+        converted = toPhp / (rates[goalChoice] ?: 0.0)
     }
 }
 fun main() {
 //    println("Hello World")
     var acc: Account? = null
-    var ratesMap = mutableMapOf<String, Double>()
+    var ratesMap = mutableMapOf<Int, Double>()
     do{
         var choice = mainMenu()
         when(choice){
@@ -139,6 +191,7 @@ fun main() {
                 depositToAccount(acc)
             }
             3 -> withdrawFromAccount(acc)
+            4 -> exchangeCurrency(ratesMap)
             5 -> recordExchangeRate(ratesMap)
             6 -> dispInterest(acc)
         }
