@@ -39,10 +39,10 @@ Please select an option:
         transactionHandler.withdraw(rl, mainMenu);
         break;
       case "4":
-        //currencyExchange.currencyExchange(rl, mainMenu);
+        currencyExchange.currencyExchange(rl, mainMenu);
         break;
       case "5":
-        //currencyExchange.recordExchangeRates(rl, mainMenu);
+        currencyExchange.recordExchangeRates(rl, mainMenu);
         break;
       case "6":
         //interestCalculator.showInterestRecord(rl, mainMenu);
