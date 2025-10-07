@@ -126,6 +126,7 @@ fun recordExchangeRate(rates: MutableMap<String, Double>){
 fun main() {
 //    println("Hello World")
     var acc: Account? = null
+    var ratesMap = mutableMapOf<String, Double>()
     do{
         var choice = mainMenu()
         when(choice){
@@ -138,6 +139,7 @@ fun main() {
                 depositToAccount(acc)
             }
             3 -> withdrawFromAccount(acc)
+            5 -> recordExchangeRate(ratesMap)
             6 -> dispInterest(acc)
         }
 
