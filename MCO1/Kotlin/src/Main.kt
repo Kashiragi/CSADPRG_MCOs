@@ -3,15 +3,17 @@ import java.text.DecimalFormat
 
 class Account(val name: String, var balance: Double){ }
 
-fun registerAccount(): Account{
+fun registerAccount(): Account? {
     println("Please input your name: ")
-    //todo:try-catch the input
-    val inputName: String = readln();
-    val acc = Account(inputName.toString(), 0.0)
-    return acc
+    val inputName: String? = readlnOrNull();
+    if (inputName != null){
+        val acc = Account(inputName.toString(), 0.0)
+        return acc
+    }
+    return null
 }
 
-fun mainMenu(): Int {
+fun mainMenu(): Int? {
     print(
         "Select Transaction: \n" +
                 "[1] Register Account Name \n" +
@@ -23,12 +25,13 @@ fun mainMenu(): Int {
                 "[7] Leave \n"
     )
     //todo:try-catch the input
-    val initial = readln().toInt() // try-catch for non-Int
+    val initial = readln()?.toIntOrNull() // try-catch for non-Int
     return if (initial in 1..7) {
         initial
     } else 7
 }
 fun depositToAccount(acc: Account?){
+    val amt: Double? = (acc?.balance)
     acc?.let { account ->
         print(
             "Deposit Amount \n" +
@@ -38,10 +41,11 @@ fun depositToAccount(acc: Account?){
             " \n" +
             "Deposit Amount: "
         )
-        //todo:try-catch the input
-        var amt = readln().toDouble()
+        var amt = readln().toDoubleOrNull()
 
-        acc.balance += amt
+        if(amt==null)
+            println("Invalid input")
+        else amt = amt?.plus(amt)
 
         print("Updated Balance: ${acc.balance} \n\n")
     } ?: run {
@@ -50,6 +54,7 @@ fun depositToAccount(acc: Account?){
 }
 
 fun withdrawFromAccount(acc: Account?){
+    val amt: Double? = acc?.balance
     acc?.let { account ->
         print(
             "Withdraw Amount \n" +
@@ -59,10 +64,11 @@ fun withdrawFromAccount(acc: Account?){
             " \n" +
             "Withdraw Amount: "
         )
-        //todo:try-catch the input
-        var amt = readln().toDouble()
+        var amt = readln().toDoubleOrNull()
 
-        acc.balance -= amt
+        if(amt==null)
+            println("Invalid input")
+        else amt = amt?.minus(amt)
 
         print("Updated Balance: ${acc.balance} \n\n")
     } ?: run {
@@ -84,45 +90,51 @@ fun dispInterest(acc: Account?) {
                 "Interest Rate: 5% \n" +
                 "Total Number of Days: ")
         //todo:try-catch the input
-        var days = readln().toInt()
-        var interest = computeDailyInterest(acc.balance)
-        var bal = acc.balance
-        val df = DecimalFormat("#.##")
-        df.roundingMode = RoundingMode.CEILING
-        println("Day  \t| Interest \t| Balance |")
-        for (i in 1..days){
-            bal += interest
-            println("$i  \t\t| ${df.format(interest)}  \t| ${df.format(bal)} |")
+        var days = readln().toIntOrNull()
+        days.let{
+            var interest = computeDailyInterest(acc.balance)
+            var bal = acc.balance
+            val df = DecimalFormat("#.##")
+            df.roundingMode = RoundingMode.CEILING
+            println("Day  \t| Interest \t| Balance |")
+            for (i in 1..(days?.toInt() ?: 30)) {
+                bal += interest
+                println("$i  \t\t| ${df.format(interest)}  \t| ${df.format(bal)} |")
+            }
         }
     } ?: run { println("No account indicated.")}
-
-
 }
-fun recordExchangeRate(rates: MutableMap<Int, Double>){
+fun recordExchangeRate(rates: MutableMap<Int, Double>) {
     // select currency to add rate
-    print("Record Exchange Rate \n" +
-            " \n" +
-            "[1] Philippine Peso (PHP) \n" +
-            "[2] United States Dollar (USD) \n" +
-            "[3] Japanese Yen (JPY) \n" +
-            "[4] British Pound Sterling (GBP) \n" +
-            "[5] Euro (EUR) \n" +
-            "[6] Chinese Yuan Renminni (CNY) \n" +
-            " \n" +
-            "Select Foreign Currency: ")
-    //todo:try-catch the input/s
+    print(
+        "Record Exchange Rate \n" +
+                " \n" +
+                "[1] Philippine Peso (PHP) \n" +
+                "[2] United States Dollar (USD) \n" +
+                "[3] Japanese Yen (JPY) \n" +
+                "[4] British Pound Sterling (GBP) \n" +
+                "[5] Euro (EUR) \n" +
+                "[6] Chinese Yuan Renminni (CNY) \n" +
+                " \n" +
+                "Select Foreign Currency: "
+    )
     var choice = readln().toInt()
     print("Exchange Rate: ")
-    var recordedRate = readln().toDouble()
-    when(choice){
-        1 -> rates.put(1, recordedRate)
-        2 -> rates.put(2, recordedRate)
-        3 -> rates.put(3, recordedRate)
-        4 -> rates.put(4, recordedRate)
-        5 -> rates.put(5, recordedRate)
-        6 -> rates.put(6, recordedRate)
+    var recordedRate: Double? = readln().toDoubleOrNull()
+    if (choice !in 1..6 && recordedRate == null) {
+        println("Please recheck your inputs.")
+        return
+    }
+    when (choice) {
+        1 -> recordedRate?.let { rates.put(1, it) }
+        2 -> recordedRate?.let { rates.put(2, it) }
+        3 -> recordedRate?.let { rates.put(3, it) }
+        4 -> recordedRate?.let { rates.put(4, it) }
+        5 -> recordedRate?.let { rates.put(5, it) }
+        6 -> recordedRate?.let { rates.put(6, it) }
     }
 }
+
 fun getSourceCurrency(): Int{
     print("Source Currency Option: \n" +
             "[1] Philippine Peso (PHP) \n" +
@@ -173,6 +185,7 @@ fun exchangeCurrency(rates: MutableMap<Int, Double>){
     } else {
         var toPhp = srcAmt * (rates[srcChoice] ?: 0.0)
         converted = toPhp / (rates[goalChoice] ?: 0.0)
+        println("Exchange Amount: $converted")
     }
 }
 fun main() {
