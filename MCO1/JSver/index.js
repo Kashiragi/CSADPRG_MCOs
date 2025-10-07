@@ -45,7 +45,7 @@ Please select an option:
         currencyExchange.recordExchangeRates(rl, mainMenu);
         break;
       case "6":
-        //interestCalculator.showInterestRecord(rl, mainMenu);
+        interestCalculator.showInterestRecord(rl, mainMenu);
         break;
       case "7":
         console.log("Exiting the application. Goodbye!");
