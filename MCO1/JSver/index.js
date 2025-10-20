@@ -1,3 +1,9 @@
+/********************
+Last names: Reyes, Saguin, Trinidad, Inocencio
+Language: JavaScript
+Paradigm(s): Object-Oriented, Functional
+********************/
+
 const accountManager = require('./modules/accountManager');
 const transactionHandler = require('./modules/transactionHandler');
 const currencyExchange = require('./modules/currencyExchange');
@@ -28,7 +34,7 @@ Please select an option:
   console.log(menu);
 
   rl.question('Enter your choice: ', (choice) => {
-    switch (choice.trim()) { // Use .trim() to remove whitespace
+    switch (choice.trim()) { 
       case "1":
         accountManager.registerAccount(rl, mainMenu);
         break;
