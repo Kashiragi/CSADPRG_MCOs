@@ -210,20 +210,22 @@ fun exchangeCurrency(rates: MutableMap<Int, Double>){
             }
         }
     }
-    var stillContinue: Boolean
+    var stillContinue: Boolean = true
     do {
         print("Foreign Currency Exchange\n")
         val srcChoice = getSourceCurrency()
         if(srcChoice !in 1..6) {
             println("Invalid currency selected")
-            break
+            stillContinue = exchange()
+            continue
         }
 
         print("Source Amount: ")
         val srcAmt = readln().toDoubleOrNull()
         if (srcAmt == null || srcAmt < 0.0){
             println("Invalid amount provided.")
-            break
+            stillContinue = exchange()
+            continue
         }
         var converted: Double = 0.0
 
@@ -232,12 +234,14 @@ fun exchangeCurrency(rates: MutableMap<Int, Double>){
         val goalChoice = getGoalCurrency()
         if(goalChoice !in 1..6) {
             println("Invalid currency selected")
-            break
+            stillContinue = exchange()
+            continue
         }
 
         if (srcChoice==goalChoice){
             println("Cannot select the same currency for exchange.")
-            break
+            stillContinue = exchange()
+            continue
         }
 
         if(goalChoice==1){
