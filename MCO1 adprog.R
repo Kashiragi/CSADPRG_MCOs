@@ -1,3 +1,9 @@
+#********************
+#  Last names: Inocencio, Reyes, Saguin, Trinidad
+#  Language: R
+#  Paradigm(s): Procedural, Imperative, Functional
+#********************
+
 
 #new environment (storage)
 app_state <- new.env(parent = emptyenv())
@@ -11,11 +17,11 @@ app_state$annual_interest_rate <- 0.05
 app_state$daily_interest_rate <- app_state$annual_interest_rate / 365
 
 app_state$exchange_rate <- list(PHP = 1.00,
-                                USD = 55.00, #NA_integer_
-                                JPY = 0.38,
-                                GBP = 68.00,
-                                EUR = 60.00,
-                                CNY = 7.50)
+                                USD = NA_integer_, #52.00, 
+                                JPY = NA_integer_, #2.6,
+                                GBP = NA_integer_, #68.00,
+                                EUR = NA_integer_, #60.00,
+                                CNY = NA_integer_ )#7.50
 
 
 #----------------------------------------------------------------------------------------------------------------
@@ -48,6 +54,7 @@ reg_acc <- function(){
   
   while(back){
     cat('Register Account Name\n')
+    # Store account name in app_state
     app_state$acc_name <- user_input('Account Name: ')
     back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
     
@@ -72,6 +79,7 @@ dep_amount <- function(){
   exchange <- app_state$exchange_rate
   currency_codes <- names(exchange)
   
+  # Checks if setup is complete (the currency exchanges rates)
   for(code in currency_codes){
     if(is.na(exchange[[code]])){
       exchange_present <- TRUE
@@ -90,51 +98,38 @@ dep_amount <- function(){
   }
   else{
     back <- TRUE
-    main
+    
     while(back){
       cat('Deposit Amount\n')
       cat(sprintf("Account Name: %s\n", app_state$acc_name))
       cat(sprintf("Current Balance: %.2f\n", app_state$acc_balance))
-      
-      currency <- toupper(user_input('Currency: '))
+      cat('Currency: PHP\n')
+      currency <- 'PHP'
       cat('\n')
-      codes <- names(app_state$exchange_rate)
-      currency_exists <- FALSE
-      for(i in 1:length(codes)){
-        if(currency == codes[i]){
-          currency_exists <- TRUE
-        } 
+      
+      dep_am <- num_input('Deposit Amount: ')
+      if (dep_am <= 0) {
+        cat("\nDeposit cancelled. Amount must be greater than zero.\n")
+        return()
       }
       
-      if(currency_exists){
-        dep_am <- num_input('Deposit Amount: ')
-        if (dep_am <= 0) {
-          cat("\nDeposit cancelled. Amount must be greater than zero.\n")
-          return()
-        }
+      to_php <- app_state$exchange_rate[[currency]]
+      amount <- dep_am * to_php
+      cat(sprintf("Depositing %.2f PHP\n", amount))
+      app_state$acc_balance <- app_state$acc_balance + amount
+      cat(sprintf("Updated Balance: %.2f\n", app_state$acc_balance))
+      back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
+      
+      if(back_main == 'Y'){
+        back <- FALSE
+        cat('Going Back To Main\n')
+      }else if(back_main == 'N'){
         
-        to_php <- app_state$exchange_rate[[currency]]
-        amount <- dep_am * to_php
-        cat(sprintf("Depositing %.2f PHP\n", amount))
-        app_state$acc_balance <- app_state$acc_balance + amount
-        cat(sprintf("Updated Balance: %.2f\n", app_state$acc_balance))
-        back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
-        
-        if(back_main == 'Y'){
-          back <- FALSE
-          cat('Going Back To Main\n')
-        }else if(back_main == 'N'){
-          
-        }
-        else{
-          cat('Invalid input!\n\n')
-          back_main <- user_input('Back to the Main Menu (Y/N): ')
-          back <- FALSE
-        }
       }
       else{
-        cat('Invalid input, type the proper curency options\n')
-        cat('PHP, USD, JPY, GBP, EUR, CYN\n\n')
+        cat('Invalid input!\n\n')
+        back_main <- user_input('Back to the Main Menu (Y/N): ')
+        back <- FALSE
       }
     }
   }
@@ -147,6 +142,7 @@ with_amount <- function(){
   exchange <- app_state$exchange_rate
   currency_codes <- names(exchange)
   
+  # Checks if setup is complete (the currency exchanges rates)
   for(code in currency_codes){
     if(is.na(exchange[[code]])){
       exchange_present <- TRUE
@@ -163,51 +159,38 @@ with_amount <- function(){
   }
   else{
     back <- TRUE
-    main
+    
     while(back){
       cat('Withdraw Amount\n')
       cat(sprintf("Account Name: %s\n", app_state$acc_name))
       cat(sprintf("Current Balance: %.2f\n", app_state$acc_balance))
-      
-      currency <- toupper(user_input('Currency: '))
+      cat('Currency: PHP\n')
+      currency <- 'PHP'
       cat('\n')
-      codes <- names(app_state$exchange_rate)
-      currency_exists <- FALSE
-      for(i in 1:length(codes)){
-        if(currency == codes[i]){
-          currency_exists <- TRUE
-        } 
+     
+      with_am <- num_input('Widthdraw Amount: ')
+      if (with_am  > app_state$acc_balance) {
+        cat("\nWithdraw cancelled. You do not have enough balance in your account.\n")
+        return()
       }
       
-      if(currency_exists){
-        with_am <- num_input('Widthdraw Amount: ')
-        if (with_am  > app_state$acc_balance) {
-          cat("\nWithdraw cancelled. You do not have enough balance in your account.\n")
-          return()
-        }
+      to_php <- app_state$exchange_rate[[currency]]
+      amount <- with_am * to_php
+      cat(sprintf("Withdrawing %.2f PHP\n", amount))
+      app_state$acc_balance <- app_state$acc_balance - amount
+      cat(sprintf("Updated Balance: %.2f\n", app_state$acc_balance))
+      back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
+      
+      if(back_main == 'Y'){
+        back <- FALSE
+        cat('Going Back To Main\n')
+      }else if(back_main == 'N'){
         
-        to_php <- app_state$exchange_rate[[currency]]
-        amount <- with_am * to_php
-        cat(sprintf("Withdrawing %.2f PHP\n", amount))
-        app_state$acc_balance <- app_state$acc_balance - amount
-        cat(sprintf("Updated Balance: %.2f\n", app_state$acc_balance))
-        back_main <- toupper(user_input('Back to the Main Menu (Y/N): '))
-        
-        if(back_main == 'Y'){
-          back <- FALSE
-          cat('Going Back To Main\n')
-        }else if(back_main == 'N'){
-          
-        }
-        else{
-          cat('Invalid input!\n\n')
-          back_main <- user_input('Back to the Main Menu (Y/N): ')
-          back <- FALSE
-        }
       }
       else{
-        cat('Invalid input, type the proper curency options\n')
-        cat('PHP, USD, JPY, GBP, EUR, CYN\n\n')
+        cat('Invalid input!\n\n')
+        back_main <- user_input('Back to the Main Menu (Y/N): ')
+        back <- FALSE
       }
     }
   }
@@ -226,6 +209,7 @@ curr_ex <- function(){
       for(code in currency_codes){
         count <- count + 1
         
+        
         switch(code,
                "PHP" = cat(sprintf("[%d] Philippine Peso (%s)\n", count, code)),
                "USD" = cat(sprintf("[%d] United States Dollar (%s)\n", count, code)),
@@ -241,6 +225,7 @@ curr_ex <- function(){
         
       }
       
+      # Confirm selected source currency name
       source_curr <- user_input("Source Currency: ")
       switch(source_curr,
              "1" = cat("Philippine Peso\n"),
@@ -255,6 +240,7 @@ curr_ex <- function(){
              }
       )
       
+      # Retrieve source currencys PHP exchange rate
       switch(source_curr,
              "1" = rate <- app_state$exchange_rate[["PHP"]],
              "2" = rate <- app_state$exchange_rate[["USD"]],
@@ -291,6 +277,7 @@ curr_ex <- function(){
       }
       
       exch_curr <- user_input("Exchange Currency: ")
+      # Confirm selected target currency name
       switch(exch_curr,
              "1" = cat("Philippine Peso\n"),
              "2" = cat("United States Dollar\n"),
@@ -317,6 +304,7 @@ curr_ex <- function(){
              }
       )
       
+      # Calculate exchange amount: source_am * (Source_Rate_to_PHP / Target_Rate_to_PHP)
       total <- source_am * (rate / exch)
       cat(sprintf("Exchange Amount: %.2f\n\n", total))
       
@@ -371,6 +359,7 @@ rec_ex_rate <- function(){
      cat("\n")
      exch_rate <- num_input("Exchange Rate: ")
      
+     # Update the selected currency's exchange rate
      switch(selected_curr,
             "1" = app_state$exchange_rate[["PHP"]] <- exch_rate,
             "2" = app_state$exchange_rate[["USD"]] <- exch_rate,
@@ -415,11 +404,11 @@ show_interest_computation <- function() {
   while(check_menu){
     cat("\n--- Show Interest Computation ---\n")
     cat(sprintf("Account Name: %s\n", app_state$acc_name))
-    cat(sprintf("Current Balance: PHP %.2f\n", app_state$balance))
+    cat(sprintf("Current Balance: PHP %.2f\n", app_state$acc_balance))
     cat("Currency: PHP \n") 
     cat("Interest Rate: 5% \n")
     
-    total_days <- as.integer(get_numeric_input("Total Number of Days: "))
+    total_days <- as.integer(num_input("Total Number of Days: "))
     if (total_days <= 0) {
       cat("Invalid number of days. Operation cancelled.\n")
       return()
@@ -432,9 +421,11 @@ show_interest_computation <- function() {
     cat(sprintf("%-5s | %-10s | %-12s\n", "Day", "Interest", "Balance (PHP)"))
     cat("-----------------------------------\n")
     
-    for (i in 1:5){
+    for (i in 1:total_days){
+      # Calculate interest for the day
       daily_interest <- curr_balance * daily_rate
       daily_interest_rounded <- round(daily_interest, 2)
+      # Compound interest daily
       curr_balance <- curr_balance + daily_interest_rounded
       cat(sprintf("%-5d | %-10.2f | %-12.2f\n", i, daily_interest, curr_balance))
     }
@@ -468,6 +459,7 @@ main <- function(){
     cat('[4] Currency Exchange\n')
     cat('[5] Recormad Exchange Rates\n')
     cat('[6] Show Interest Computation\n')
+    cat("[7] Exit Application\n")
     
     answer <- user_input('Enter Choice: ')
     
@@ -478,9 +470,12 @@ main <- function(){
             "4" = curr_ex(),
             "5" = rec_ex_rate(),
             "6" = show_interest_computation(),
-            {
-              cat("\nInvalid choice. Please enter a number from 1 to 6.\n")
+            "7" = {
               running <- FALSE
+              cat("\nThank you for using the Banking and Currency Exchange App. Goodbye!\n")
+            },
+            {
+              cat("\nInvalid choice. Please enter a number from 1 to 7.\n")
             }
     )
     
