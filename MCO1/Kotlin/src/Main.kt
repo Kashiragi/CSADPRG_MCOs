@@ -50,7 +50,8 @@ fun mainMenu(): Int? {
                 "[3] Withdraw Amount \n" +
                 "[4] Currency Exchange \n" +
                 "[5] Record Exchange Rates \n" +
-                "[6] Show Interest Computation \n"
+                "[6] Show Interest Computation \n" +
+                "[7] Leave the application \n"
     )
     //todo:try-catch the input
     val initial = readln()?.toIntOrNull() // try-catch for non-Int
@@ -353,6 +354,7 @@ fun main() {
     var ratesMap = mutableMapOf<Int, Double>()
     do{
         var choice = mainMenu()
+
         when(choice){
             1 -> {
                 if(acc == null)
@@ -380,6 +382,7 @@ fun main() {
                 dispInterest(acc)
 //                leaveProgram = returnToMain()
             }
+            7 -> leaveProgram = false
         }
     }
     while(leaveProgram)
