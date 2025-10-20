@@ -1,6 +1,7 @@
 import kotlin.math.round
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.PI
 
 class Account(val name: String, var balance: Double){ }
 
@@ -123,37 +124,53 @@ fun dispInterest(acc: Account?) {
     } ?: run { println("No account indicated.")}
 }
 fun recordExchangeRate(rates: MutableMap<Int, Double>) {
+    val choice: ()->Boolean = {
+        print("\nBack to the Main Menu (Y/N): ")
+        val choice = readln().uppercase()
+        when(choice){
+            "Y" -> true
+            "N" -> false
+            else -> {
+                println("Invalid input. Leaving program.")
+                false
+            }
+        }
+    }
+    var record: Boolean
     // select currency to add rate
-    print(
-        "Record Exchange Rate \n" +
-                " \n" +
-                "[1] Philippine Peso (PHP) \n" +
-                "[2] United States Dollar (USD) \n" +
-                "[3] Japanese Yen (JPY) \n" +
-                "[4] British Pound Sterling (GBP) \n" +
-                "[5] Euro (EUR) \n" +
-                "[6] Chinese Yuan Renminni (CNY) \n" +
-                " \n" +
-                "Select Foreign Currency: "
-    )
-    var choice = readln().toInt()
-    print("Exchange Rate: ")
-    var recordedRate: Double? = readln().toDoubleOrNull()
-    if (choice !in 1..6 || recordedRate == null) { // or, not and
-        println("Please recheck your inputs.")
-        return
-    }
-    when (choice) {
-        1 -> recordedRate?.let { rates.put(1, it) } //run block to show invalid exchange rate
-        2 -> recordedRate?.let { rates.put(2, it) }
-        3 -> recordedRate?.let { rates.put(3, it) }
-        4 -> recordedRate?.let { rates.put(4, it) }
-        5 -> recordedRate?.let { rates.put(5, it) }
-        6 -> recordedRate?.let { rates.put(6, it) }
-    }
+    do {
+        print(
+            "Record Exchange Rate \n" +
+                    " \n" +
+                    "[1] Philippine Peso (PHP) \n" +
+                    "[2] United States Dollar (USD) \n" +
+                    "[3] Japanese Yen (JPY) \n" +
+                    "[4] British Pound Sterling (GBP) \n" +
+                    "[5] Euro (EUR) \n" +
+                    "[6] Chinese Yuan Renminni (CNY) \n" +
+                    " \n" +
+                    "Select Foreign Currency: "
+        )
+        var choice = readln().toIntOrNull()
+        print("Exchange Rate: ")
+        var recordedRate: Double? = readln().toDoubleOrNull()
+        if (choice !in 1..6 || recordedRate == null) { // or, not and
+            println("Please recheck your inputs.")
+            break
+        }
+        when (choice) {
+            1 -> recordedRate.let { rates.put(1, it) }
+            2 -> recordedRate.let { rates.put(2, it) }
+            3 -> recordedRate.let { rates.put(3, it) }
+            4 -> recordedRate.let { rates.put(4, it) }
+            5 -> recordedRate.let { rates.put(5, it) }
+            6 -> recordedRate.let { rates.put(6, it) }
+        }
+        record = choice()
+    } while(record)
 }
 
-fun getSourceCurrency(): Int{
+fun getSourceCurrency(): Int?{
     print("Source Currency Option: \n" +
             "[1] Philippine Peso (PHP) \n" +
             "[2] United States Dollar (USD) \n" +
@@ -163,10 +180,10 @@ fun getSourceCurrency(): Int{
             "[6] Chinese Yuan Renminni (CNY) \n" +
             " \n" +
             "Source Currency: ")
-    var srcChoice = readln().toInt()
+    var srcChoice = readln().toIntOrNull()
     return srcChoice
 }
-fun getGoalCurrency(): Int{
+fun getGoalCurrency(): Int?{
     print("Exchanged Currency Option: \n" +
             "[1] Philippine Peso (PHP) \n" +
             "[2] United States Dollar (USD) \n" +
@@ -176,7 +193,7 @@ fun getGoalCurrency(): Int{
             "[6] Chinese Yuan Renminni (CNY) \n" +
             " \n" +
             "Goal Currency: ") //exchange currency
-    var goalChoice = readln().toInt()
+    var goalChoice = readln().toIntOrNull()
     return goalChoice
 }
 
@@ -193,7 +210,7 @@ fun exchangeCurrency(rates: MutableMap<Int, Double>){
             }
         }
     }
-    var stillContinue: Boolean = true
+    var stillContinue: Boolean
     do {
         print("Foreign Currency Exchange\n")
         val srcChoice = getSourceCurrency()
@@ -204,7 +221,7 @@ fun exchangeCurrency(rates: MutableMap<Int, Double>){
 
         print("Source Amount: ")
         val srcAmt = readln().toDoubleOrNull()
-        if (srcAmt == null){
+        if (srcAmt == null || srcAmt < 0.0){
             println("Invalid amount provided.")
             break
         }
@@ -280,11 +297,11 @@ fun main() {
             }
             4 -> {
                 exchangeCurrency(ratesMap)
-                leaveProgram = returnToMain()
+//                leaveProgram = returnToMain() //remove this. redundant to exchange() call
             }
             5 -> {
                 recordExchangeRate(ratesMap)
-                leaveProgram = returnToMain()
+//                leaveProgram = returnToMain()
             }
             6 -> {
                 dispInterest(acc)
