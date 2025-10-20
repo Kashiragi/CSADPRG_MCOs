@@ -6,13 +6,29 @@ import kotlin.math.PI
 class Account(val name: String, var balance: Double){ }
 
 fun registerAccount(): Account? {
-    println("Please input your name: ")
-    val inputName: String? = readlnOrNull();
-    if (inputName != null){
-        val acc = Account(inputName.toString(), 0.0)
-        return acc
+    val choice: ()->Boolean = {
+        print("\nBack to the Main Menu (Y/N): ")
+        val choice = readln().uppercase()
+        when(choice){
+            "Y" -> false
+            "N" -> true
+            else -> {
+                println("Invalid input. Leaving transaction.")
+                false
+            }
+        }
     }
-    return null
+    var register: Boolean = true
+    var acc: Account? = null
+    do{
+        println("Please input your name: ")
+        val inputName: String? = readlnOrNull();
+        if (inputName != null){
+            acc = Account(inputName.toString(), 0.0)
+            register = choice()
+        }
+    } while (register)
+    return acc
 }
 fun returnToMain(): Boolean {
     print("\nBack to the Main Menu (Y/N): ")
@@ -43,57 +59,91 @@ fun mainMenu(): Int? {
     } else 7
 }
 fun depositToAccount(acc: Account?){
-    val bal: Double? = (acc?.balance)
-    acc?.let { account ->
-        print(
-            "Deposit Amount \n" +
-            "Account Name: ${acc.name} \n" +
-            "Current Balance: ${acc.balance} \n" +
-            "Currency: PHP \n" +
-            " \n" +
-            "Deposit Amount: "
-        )
-        var amt = readln().toDoubleOrNull()
-
-        if(amt==null)
-            println("Invalid input")
-        else {
-            amt = bal?.plus(amt)
-            if (amt != null) {
-                acc.balance = amt
+    val choice: ()->Boolean = {
+        print("\nBack to the Main Menu (Y/N): ")
+        val choice = readln().uppercase()
+        when(choice){
+            "Y" -> false
+            "N" -> true
+            else -> {
+                println("Invalid input. Leaving transaction.")
+                false
             }
         }
-        print("Updated Balance: ${acc.balance} \n\n")
-    } ?: run {
-        println("No account indicated.")
     }
+    var deposit: Boolean = true
+    val bal: Double? = (acc?.balance)
+    do{
+
+        acc?.let { account ->
+            print(
+                "Deposit Amount \n" +
+                "Account Name: ${acc.name} \n" +
+                "Current Balance: ${acc.balance} \n" +
+                "Currency: PHP \n" +
+                " \n" +
+                "Deposit Amount: "
+            )
+            var amt = readln().toDoubleOrNull()
+
+            if(amt==null || amt < 0.0)
+                println("Invalid input")
+            else {
+                amt = bal?.plus(amt)
+                if (amt != null) {
+                    acc.balance = amt
+                }
+            }
+            print("Updated Balance: ${acc.balance} \n\n")
+        } ?: run {
+            println("No account indicated.")
+        }
+        deposit = choice()
+    } while (deposit)
 }
 
 fun withdrawFromAccount(acc: Account?){
-    val bal: Double? = acc?.balance
-    acc?.let { account ->
-        print(
-            "Withdraw Amount \n" +
-            "Account Name: ${acc.name} \n" +
-            "Current Balance: ${acc.balance} \n" +
-            "Currency: PHP \n" +
-            " \n" +
-            "Withdraw Amount: "
-        )
-        var amt = readln().toDoubleOrNull()
-
-        if(amt==null)
-            println("Invalid input")
-        else {
-            amt = bal?.minus(amt)
-            if (amt != null) {
-                acc.balance = amt
+    val choice: ()->Boolean = {
+        print("\nBack to the Main Menu (Y/N): ")
+        val choice = readln().uppercase()
+        when(choice){
+            "Y" -> false
+            "N" -> true
+            else -> {
+                println("Invalid input. Leaving transaction.")
+                false
             }
         }
-        print("Updated Balance: ${acc.balance} \n\n")
-    } ?: run {
-        println("No account indicated.")
     }
+    var withdraw: Boolean = true
+    val bal: Double? = acc?.balance
+    do {
+
+        acc?.let { account ->
+            print(
+                "Withdraw Amount \n" +
+                "Account Name: ${acc.name} \n" +
+                "Current Balance: ${acc.balance} \n" +
+                "Currency: PHP \n" +
+                " \n" +
+                "Withdraw Amount: "
+            )
+            var amt = readln().toDoubleOrNull()
+
+            if(amt==null || acc.balance < amt || amt < 0.0)
+                println("Invalid input")
+            else {
+                amt = bal?.minus(amt)
+                if (amt != null) {
+                    acc.balance = amt
+                }
+            }
+            print("Updated Balance: ${acc.balance} \n\n")
+        } ?: run {
+            println("No account indicated.")
+        }
+        withdraw = choice()
+    } while(withdraw)
 }
 
 fun computeDailyInterest(currAmt: Double): Double {
@@ -102,26 +152,44 @@ fun computeDailyInterest(currAmt: Double): Double {
 }
 
 fun dispInterest(acc: Account?) {
-    acc?.let { account ->
-        print("Show Interest Amount \n" +
-                "Account Name: ${acc.name} \n" +
-                "Current Balance: ${acc.balance} \n" +
-                "Currency: PHP \n" +
-                "Interest Rate: 5% \n" +
-                "Total Number of Days: ")
-        val days = readln().toIntOrNull()
-        days.let{
-            val interestDouble: Double = computeDailyInterest(acc.balance)
-            var interest = interestDouble.toBigDecimal()
-            var bal = acc.balance.toBigDecimal()
-            println("Day\t\t\t| Interest\t| Balance |")
-            for (i in 1..(days ?: 30)) {
-                interest = interest.setScale(2, RoundingMode.HALF_UP)
-                bal += interest
-                println("$i\t\t\t| ${interest}  \t| ${bal} |")
+    val choice: ()->Boolean = {
+        print("\nBack to the Main Menu (Y/N): ")
+        val choice = readln().uppercase()
+        when(choice){
+            "Y" -> false
+            "N" -> true
+            else -> {
+                println("Invalid input. Leaving transaction.")
+                false
             }
         }
-    } ?: run { println("No account indicated.")}
+    }
+    var compute: Boolean = true
+    do{
+        acc?.let { account ->
+            print("Show Interest Amount \n" +
+                    "Account Name: ${acc.name} \n" +
+                    "Current Balance: ${acc.balance} \n" +
+                    "Currency: PHP \n" +
+                    "Interest Rate: 5% \n" +
+                    "Total Number of Days: ")
+            val days = readln().toIntOrNull()
+            days.let {
+                val interestDouble: Double = computeDailyInterest(acc.balance)
+                var interest = interestDouble.toBigDecimal()
+                var bal = acc.balance.toBigDecimal()
+                println("Day\t\t\t| Interest\t| Balance |")
+                for (i in 1..(days ?: 30)) {
+                    interest = interest.setScale(2, RoundingMode.HALF_UP)
+                    bal += interest
+                    println("$i\t\t\t| ${interest}  \t| ${bal} |")
+                }
+            }
+        } ?: run {
+            println("No account indicated.")
+        }
+        compute = choice()
+    } while (compute)
 }
 fun recordExchangeRate(rates: MutableMap<Int, Double>) {
     val choice: ()->Boolean = {
@@ -131,7 +199,7 @@ fun recordExchangeRate(rates: MutableMap<Int, Double>) {
             "Y" -> false
             "N" -> true
             else -> {
-                println("Invalid input. Leaving program.")
+                println("Invalid input. Leaving transaction.")
                 false
             }
         }
@@ -206,7 +274,7 @@ fun exchangeCurrency(rates: MutableMap<Int, Double>){
             "Y" -> true
             "N" -> false
             else -> {
-                println("Invalid input. Leaving program.")
+                println("Invalid input. Leaving transaction.")
                 false
             }
         }
@@ -290,15 +358,15 @@ fun main() {
                 if(acc == null)
                     acc = registerAccount()
                 else println("An account has already been logged in: ${acc.name}. Cannot register a new one.")
-                leaveProgram = returnToMain()
+//                leaveProgram = returnToMain()
             }
             2 -> {
                 depositToAccount(acc)
-                leaveProgram = returnToMain()
+//                leaveProgram = returnToMain()
             }
             3 -> {
                 withdrawFromAccount(acc)
-                leaveProgram = returnToMain()
+//                leaveProgram = returnToMain()
             }
             4 -> {
                 exchangeCurrency(ratesMap)
@@ -310,7 +378,7 @@ fun main() {
             }
             6 -> {
                 dispInterest(acc)
-                leaveProgram = returnToMain()
+//                leaveProgram = returnToMain()
             }
         }
     }
