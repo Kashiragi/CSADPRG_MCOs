@@ -1,5 +1,6 @@
+import kotlin.math.round
+import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.DecimalFormat
 
 class Account(val name: String, var balance: Double){ }
 
@@ -95,7 +96,7 @@ fun withdrawFromAccount(acc: Account?){
 }
 
 fun computeDailyInterest(currAmt: Double): Double {
-    var dailyRate = 0.05 / 365;
+    var dailyRate: Double = 0.05 / 365;
     return currAmt * dailyRate
 }
 
@@ -107,16 +108,16 @@ fun dispInterest(acc: Account?) {
                 "Currency: PHP \n" +
                 "Interest Rate: 5% \n" +
                 "Total Number of Days: ")
-        var days = readln().toIntOrNull()
+        val days = readln().toIntOrNull()
         days.let{
-            var interest = computeDailyInterest(acc.balance)
-            var bal = acc.balance
-            val df = DecimalFormat("#.##")
-            df.roundingMode = RoundingMode.CEILING
-            println("Day  \t| Interest \t| Balance |")
-            for (i in 1..(days?.toInt() ?: 30)) {
+            val interestDouble: Double = computeDailyInterest(acc.balance)
+            var interest = interestDouble.toBigDecimal()
+            var bal = acc.balance.toBigDecimal()
+            println("Day\t\t\t| Interest\t| Balance |")
+            for (i in 1..(days ?: 30)) {
+                interest = interest.setScale(2, RoundingMode.HALF_UP)
                 bal += interest
-                println("$i  \t\t| ${df.format(interest)}  \t| ${df.format(bal)} |")
+                println("$i\t\t\t| ${interest}  \t| ${bal} |")
             }
         }
     } ?: run { println("No account indicated.")}
@@ -274,4 +275,6 @@ fun main() {
         }
     }
     while(leaveProgram)
+
+    println("Thank you using this program!")
 }
