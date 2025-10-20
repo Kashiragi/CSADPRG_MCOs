@@ -128,15 +128,15 @@ fun recordExchangeRate(rates: MutableMap<Int, Double>) {
         print("\nBack to the Main Menu (Y/N): ")
         val choice = readln().uppercase()
         when(choice){
-            "Y" -> true
-            "N" -> false
+            "Y" -> false
+            "N" -> true
             else -> {
                 println("Invalid input. Leaving program.")
                 false
             }
         }
     }
-    var record: Boolean
+    var record: Boolean = true
     // select currency to add rate
     do {
         print(
@@ -154,9 +154,10 @@ fun recordExchangeRate(rates: MutableMap<Int, Double>) {
         var choice = readln().toIntOrNull()
         print("Exchange Rate: ")
         var recordedRate: Double? = readln().toDoubleOrNull()
-        if (choice !in 1..6 || recordedRate == null) { // or, not and
+        if (choice !in 1..6 || (recordedRate == null || recordedRate < 0.0)) { // or, not and
             println("Please recheck your inputs.")
-            break
+            record = choice()
+            continue
         }
         when (choice) {
             1 -> recordedRate.let { rates.put(1, it) }
