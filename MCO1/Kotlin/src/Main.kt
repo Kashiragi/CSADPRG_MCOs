@@ -138,7 +138,7 @@ fun recordExchangeRate(rates: MutableMap<Int, Double>) {
     var choice = readln().toInt()
     print("Exchange Rate: ")
     var recordedRate: Double? = readln().toDoubleOrNull()
-    if (choice !in 1..6 && recordedRate == null) { // or, not and
+    if (choice !in 1..6 || recordedRate == null) { // or, not and
         println("Please recheck your inputs.")
         return
     }
@@ -174,39 +174,71 @@ fun getGoalCurrency(): Int{
             "[5] Euro (EUR) \n" +
             "[6] Chinese Yuan Renminni (CNY) \n" +
             " \n" +
-            "Source Currency: ") //exchange currency
+            "Goal Currency: ") //exchange currency
     var goalChoice = readln().toInt()
     return goalChoice
 }
 fun exchangeCurrency(rates: MutableMap<Int, Double>){
-    print("Foreign Currency Exchange")
-    var srcChoice = getSourceCurrency()
-    print("Source Amount: ")
-    var srcAmt = readln().toDouble()
-    var converted: Double = 0.0
-    print("\n")
-    var goalChoice = getGoalCurrency()
+    print("Foreign Currency Exchange\n")
+    val srcChoice = getSourceCurrency()
+    if(srcChoice !in 1..6) {
+        println("Invalid currency selected")
+        return
+    }
 
-    if(srcChoice !in 1..6 && goalChoice !in 1..6) {
-        println("Invalid currencies selected.")
-    } else if (srcChoice==goalChoice){
+    print("Source Amount: ")
+    val srcAmt = readln().toDoubleOrNull()
+    if (srcAmt == null){
+        println("Invalid amount provided.")
+        return
+    }
+    var converted: Double = 0.0
+
+    print("\n")
+
+    val goalChoice = getGoalCurrency()
+    if(goalChoice !in 1..6) {
+        println("Invalid currency selected")
+        return
+    }
+
+    if (srcChoice==goalChoice){
         println("Cannot select the same currency for exchange.")
-    } else if(goalChoice==1){
-        //to PHP
-        converted = srcAmt * (rates[srcChoice] ?: 0.0)
-        println("Exchange Amount: $converted")
+        return
+    }
+
+    if(goalChoice==1){
+            //to PHP
+            converted = srcAmt * (rates[srcChoice] ?: 0.0)
+            println("Exchange Amount: $converted")
     } else if (srcChoice==1) {
         //from PHP
-        converted = srcAmt / (rates[goalChoice] ?: 0.0)
+        val rate: Double = rates[goalChoice] ?: 0.0
+        converted = if(rate != 0.0){
+            srcAmt.div(rate)
+        } else {
+            0.0
+        }
         println("Exchange Amount: $converted")
     } else {
+        // to php
         var toPhp = srcAmt * (rates[srcChoice] ?: 0.0)
-        converted = toPhp / (rates[goalChoice] ?: 0.0)
+        //from php
+        val rateGoal = rates[goalChoice] ?:0.0
+        converted = if(rateGoal!=0.0){
+            toPhp.div(rateGoal)
+        }
+        else {
+            0.0
+        }
+
         println("Exchange Amount: $converted")
+    }
+    if(converted == 0.0){
+        println("***The rates may not have been set or the amount provided is 0.0.")
     }
 }
 fun main() {
-//    println("Hello World")
     var acc: Account? = null
     var leaveProgram: Boolean = true
     var ratesMap = mutableMapOf<Int, Double>()
