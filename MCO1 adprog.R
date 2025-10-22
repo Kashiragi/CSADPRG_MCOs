@@ -5,35 +5,51 @@
 #********************
 
 
-#new environment (storage)
+# Environment Initialization for Application State
+# A new dedicated environment is used to store and manage global application
+# global environment.
 app_state <- new.env(parent = emptyenv())
 
-#kinda like global vals but in environment so safe siya
+# Application State Variables
 app_state$acc_name <- 'N/A'
 app_state$acc_balance <- 0.00
 app_state$base_currency <- "PHP"
 
+# Interest Rate Configuration
 app_state$annual_interest_rate <- 0.05
+
+# Calculates the daily interest rate for compounding, assuming 365 days.
 app_state$daily_interest_rate <- app_state$annual_interest_rate / 365
 
+# Exchange Rate List
+# Stores the rate of 1 unit of the foreign currency relative to 1 PHP (Base Currency).
+# Initialized rates for foreign currencies are set to NA.
 app_state$exchange_rate <- list(PHP = 1.00,
-                                USD = NA_integer_, #52.00, 
-                                JPY = NA_integer_, #2.6,
-                                GBP = NA_integer_, #68.00,
-                                EUR = NA_integer_, #60.00,
-                                CNY = NA_integer_ )#7.50
+                                USD = NA_integer_,  
+                                JPY = NA_integer_, 
+                                GBP = NA_integer_, 
+                                EUR = NA_integer_, 
+                                CNY = NA_integer_ )
 
 
 #----------------------------------------------------------------------------------------------------------------
 
 #helper Functions
-#String Input
+
+## User String Input Function
+# Prompts the user for input and returns the trimmed string.
+# @param answer A string representing the prompt for the user.
+# @return The user's input string, with leading/trailing whitespace removed.
 user_input <- function(answer){
   input <- trimws(readline(answer))
   return(input)
 }
 
-#num input
+## Non-negative Numeric Input Function
+# Prompts the user for a non-negative numeric input, validating until a correct
+# value is provided.
+# @param answer A string representing the prompt for the user.
+# @return The user's input as a validated non-negative numeric value.
 num_input <- function(answer){
   while(TRUE){
     input <- user_input(answer)
@@ -48,7 +64,9 @@ num_input <- function(answer){
 #----------------------------------------------------------------------------------------------------------------
 
 #Main menu functions
-#[1] register account
+
+## [1] Register Account Name
+# Function to register or update the account holder's name.
 reg_acc <- function(){
   back <- TRUE
   
@@ -72,28 +90,15 @@ reg_acc <- function(){
   }
 }
 
-#[2]Deposit Amount
+## [2] Deposit Amount
+# Handles the deposit transaction in the base currency (PHP).
 dep_amount <- function(){
-  
-  exchange_present <- FALSE
   exchange <- app_state$exchange_rate
   currency_codes <- names(exchange)
-  
-  # Checks if setup is complete (the currency exchanges rates)
-  for(code in currency_codes){
-    if(is.na(exchange[[code]])){
-      exchange_present <- TRUE
-      break
-    }
-  }
   
   
   if(app_state$acc_name == 'N/A'){
     cat('Register an account first!\n\n')
-    return()
-  }
-  else if(exchange_present){
-    cat('Set Up Exchange rates first!\n\n')
     return()
   }
   else{
@@ -135,26 +140,16 @@ dep_amount <- function(){
   }
 }
 
-#[3] Withdraw Amount
+## [3] Withdraw Amount
+# Handles the withdrawal transaction in the base currency (PHP).
 with_amount <- function(){
   
   exchange_present <- FALSE
   exchange <- app_state$exchange_rate
   currency_codes <- names(exchange)
   
-  # Checks if setup is complete (the currency exchanges rates)
-  for(code in currency_codes){
-    if(is.na(exchange[[code]])){
-      exchange_present <- TRUE
-      break
-    }
-  }
-  
   if(app_state$acc_name == 'N/A'){
     cat('Register an account first!\n\n')
-    return()
-  }else if(exchange_present){
-    cat('Set Up Exchange rates first!\n\n')
     return()
   }
   else{
@@ -197,7 +192,8 @@ with_amount <- function(){
 }
 
 
-#[4]Currency Exchange
+## [4] Currency Exchange
+# Performs currency conversion between any two supported currencies.
 curr_ex <- function(){
   check_menu <- TRUE
   exchange <- app_state$exchange_rate
@@ -326,7 +322,8 @@ curr_ex <- function(){
   }
 }
 
-#[5] Recormad Exchange Rates
+## [5] Record Exchange Rates
+# Allows the user to input and set the exchange rate for foreign currencies to PHP.
 rec_ex_rate <- function(){
   check_menu <- TRUE
   exchange <- app_state$exchange_rate
@@ -392,8 +389,8 @@ rec_ex_rate <- function(){
   
 }
 
-
-#[6] Show Interest Computation
+## [6] Show Interest Computation
+# Calculates and displays the daily compound interest over a specified period.
 show_interest_computation <- function() {
   check_menu <- TRUE
   if (app_state$acc_name == "N/A") {
@@ -446,13 +443,18 @@ show_interest_computation <- function() {
 }
 #----------------------------------------------------------------------------------------------------------------
 
-#main
+## Main Application Execution
+# The core function that runs the main menu loop and dispatches control to
+# the selected transaction functions.
 main <- function(){
   running <- TRUE
   while(running){
+    # Display current application status
     cat(sprintf("Account Name: %s\n", app_state$acc_name))
     cat(sprintf("Current Balance: %.2f\n", app_state$acc_balance))
     cat('Select Transaction:\n')
+    
+    # Display Menu Options
     cat('[1] Register Account Name\n')
     cat('[2] Deposit Amount\n')
     cat('[3] Withdraw Amount\n')
