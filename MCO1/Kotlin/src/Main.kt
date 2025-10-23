@@ -1,10 +1,24 @@
-import kotlin.math.round
-import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlin.math.PI
+/********************
+*  Author: Saguin, VL Kirsten "Kei"
+*  Language: Kotlin
+*  Paradigm(s): Object-Oriented, Functional, Imperative
+********************/
 
+/**
+ * Represents an Account object
+ *
+ * @param name the name of the account
+ * @param balance the balance of the account with this name
+ *
+ */
 class Account(val name: String, var balance: Double){ }
 
+/**
+ * Registers an account in this program
+ *
+ * @return an Account object or null
+ */
 fun registerAccount(): Account? {
     val choice: ()->Boolean = {
         print("\nBack to the Main Menu (Y/N): ")
@@ -30,18 +44,12 @@ fun registerAccount(): Account? {
     } while (register)
     return acc
 }
-fun returnToMain(): Boolean {
-    print("\nBack to the Main Menu (Y/N): ")
-    val choice = readln().uppercase()
-    if(choice=="Y") {
-        return true
-    } else if (choice=="N") {
-        return false
-    } else {
-        println("Invalid input. Leaving program.")
-        return false
-    }
-}
+
+/**
+ * Displays a main menu, asking the user to select a transaction.
+ * Any option outside of 1-7 shall result in null
+ * @return a value from 1-7
+ */
 fun mainMenu(): Int? {
     print(
         "Select Transaction: \n" +
@@ -54,11 +62,18 @@ fun mainMenu(): Int? {
                 "[7] Leave the application \n"
     )
     //todo:try-catch the input
-    val initial = readln()?.toIntOrNull() // try-catch for non-Int
+    val initial = readln().toIntOrNull() // try-catch for non-Int
     return if (initial in 1..7) {
         initial
     } else 7
 }
+
+/**
+ * Deposits a value to the account's balance, updating the said balance.
+ * Valid amounts are those above 0 (positive numbers).
+ *
+ * @param acc the account the amount will be deposited to
+ */
 fun depositToAccount(acc: Account?){
     val choice: ()->Boolean = {
         print("\nBack to the Main Menu (Y/N): ")
@@ -75,7 +90,7 @@ fun depositToAccount(acc: Account?){
     var deposit: Boolean = true
     val bal: Double? = (acc?.balance)
     do{
-
+        // will only happen if not null
         acc?.let { account ->
             print(
                 "Deposit Amount \n" +
@@ -96,13 +111,20 @@ fun depositToAccount(acc: Account?){
                 }
             }
             print("Updated Balance: ${acc.balance} \n\n")
-        } ?: run {
+        } ?: run { // if null, this will run
             println("No account indicated.")
         }
         deposit = choice()
     } while (deposit)
 }
 
+/**
+ * Withdraws a value to the account's balance, updating the said balance.
+ * Valid amounts are those above 0 (positive numbers) and values that are
+ * greater than the balance are rendered invalid amounts.
+ *
+ * @param acc the account the amount will be deposited to
+ */
 fun withdrawFromAccount(acc: Account?){
     val choice: ()->Boolean = {
         print("\nBack to the Main Menu (Y/N): ")
@@ -119,7 +141,7 @@ fun withdrawFromAccount(acc: Account?){
     var withdraw: Boolean = true
     val bal: Double? = acc?.balance
     do {
-
+        // happens when not null
         acc?.let { account ->
             print(
                 "Withdraw Amount \n" +
@@ -147,11 +169,26 @@ fun withdrawFromAccount(acc: Account?){
     } while(withdraw)
 }
 
+/**
+ * Computes the daily interest based on the amount given.
+ * For this program, the annual interest is 5% or 0.05
+ *
+ * @param currAmt the principal amount that will gain interset
+ *
+ * @return the daily interest gained
+ */
 fun computeDailyInterest(currAmt: Double): Double {
     var dailyRate: Double = 0.05 / 365;
     return currAmt * dailyRate
 }
 
+/**
+ * Displays the interest based on an accounts balance.
+ * The interest is shown per day and the number of days to be displayed
+ * is up to the user
+ *
+ * @param acc the account where the balance will gain interest
+ */
 fun dispInterest(acc: Account?) {
     val choice: ()->Boolean = {
         print("\nBack to the Main Menu (Y/N): ")
@@ -192,6 +229,11 @@ fun dispInterest(acc: Account?) {
         compute = choice()
     } while (compute)
 }
+
+/**
+ * Records the exchange rate for foreign currencies into a map.
+ * The currencies to be recorded are PHP, USD, JPY, GBP, EUR, and CNY
+ */
 fun recordExchangeRate(rates: MutableMap<Int, Double>) {
     val choice: ()->Boolean = {
         print("\nBack to the Main Menu (Y/N): ")
@@ -240,6 +282,12 @@ fun recordExchangeRate(rates: MutableMap<Int, Double>) {
     } while(record)
 }
 
+/**
+ * Displays a list of options and returns the source currency option.
+ * A helper function for exchangeCurrencies()
+ *
+ * @return the selected currency option or null if not an integer
+ */
 fun getSourceCurrency(): Int?{
     print("Source Currency Option: \n" +
             "[1] Philippine Peso (PHP) \n" +
@@ -253,6 +301,13 @@ fun getSourceCurrency(): Int?{
     var srcChoice = readln().toIntOrNull()
     return srcChoice
 }
+
+/**
+ * Displays a list of options and returns the goal currency option.
+ * A helper function for exchangeCurrencies()
+ *
+ * @return the selected currency option or null if not an integer
+ */
 fun getGoalCurrency(): Int?{
     print("Exchanged Currency Option: \n" +
             "[1] Philippine Peso (PHP) \n" +
@@ -267,6 +322,13 @@ fun getGoalCurrency(): Int?{
     return goalChoice
 }
 
+/**
+ * Exchanges the currency of the inputted amount and prints the converted value.
+ * The value is converted based on the rates from the map provided.
+ *
+ * @param rates the MutableMap containing the rates for each currency when
+ * being converted from PHP
+ */
 fun exchangeCurrency(rates: MutableMap<Int, Double>){
     var exchange: ()->Boolean = {
         print("\nConvert another currency (Y/N)? . . . ")
@@ -360,27 +422,21 @@ fun main() {
                 if(acc == null)
                     acc = registerAccount()
                 else println("An account has already been logged in: ${acc.name}. Cannot register a new one.")
-//                leaveProgram = returnToMain()
             }
             2 -> {
                 depositToAccount(acc)
-//                leaveProgram = returnToMain()
             }
             3 -> {
                 withdrawFromAccount(acc)
-//                leaveProgram = returnToMain()
             }
             4 -> {
                 exchangeCurrency(ratesMap)
-//                leaveProgram = returnToMain() //remove this. redundant to exchange() call
             }
             5 -> {
                 recordExchangeRate(ratesMap)
-//                leaveProgram = returnToMain()
             }
             6 -> {
                 dispInterest(acc)
-//                leaveProgram = returnToMain()
             }
             7 -> leaveProgram = false
         }
