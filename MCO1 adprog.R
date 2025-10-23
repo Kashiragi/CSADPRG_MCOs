@@ -1,5 +1,5 @@
 #********************
-#  Last names: Inocencio, Reyes, Saguin, Trinidad
+#  Last names: Inocencio
 #  Language: R
 #  Paradigm(s): Procedural, Imperative, Functional
 #********************
