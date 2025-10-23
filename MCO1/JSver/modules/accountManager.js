@@ -3,6 +3,8 @@
 // ============================================
 // Manages single user account registration and information
 // Only one account can exist at a time in this banking system
+// Single account system - only one account can exist at a time
+let account = null;
 
 // ============================================
 // ACCOUNT STORAGE
@@ -74,6 +76,7 @@ function getAccount() {
  * @param {number} newBalance - The new balance to set
  * @returns {boolean} True if update successful, false if no account exists
  */
+
 function updateBalance(newBalance) {
     if (account !== null) {
         account.balance = newBalance;
