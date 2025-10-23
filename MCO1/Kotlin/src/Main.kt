@@ -3,6 +3,7 @@ import java.math.RoundingMode
 *  Author: Saguin, VL Kirsten "Kei"
 *  Language: Kotlin
 *  Paradigm(s): Object-Oriented, Functional, Imperative
+*
 ********************/
 
 /**
