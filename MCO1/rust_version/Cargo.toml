@@ -1,0 +1,10 @@
+[package]
+name = "mco1_rust_version"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[[bin]]
+name = "mco1_rust_version"
+path = "src/MP_3_Rust.rs"
