@@ -17,10 +17,11 @@ let account = null;
  * Registers a new account with a user-provided name
  * @param {Object} rl - The readline interface for user input
  * @param {Function} callBack - Callback function to return to main menu
+ * @param {boolean} isInitialRegistration - Flag to indicate if this is the first registration prompt
  */
-function registerAccount(rl, callBack) {
-    // Check if an account already exists
-    if (account !== null) {
+function registerAccount(rl, callBack, isInitialRegistration = (account === null)) {
+    // Check if an account already exists and this is NOT the initial registration
+    if (account !== null && !isInitialRegistration) {
         console.log("An account is already registered!");
         console.log(`Existing account: "${account.name}"`);
         rl.question("Back to main menu? (Y/N) ", function(answer) {
@@ -28,7 +29,7 @@ function registerAccount(rl, callBack) {
                 callBack();
             } else {
                 // Re-prompt if user chooses not to return
-                registerAccount(rl, callBack);
+                registerAccount(rl, callBack, false);
             }
         });
         return;
@@ -44,7 +45,7 @@ function registerAccount(rl, callBack) {
                     callBack();
                 } else {
                     // Retry registration if user chooses not to return
-                    registerAccount(rl, callBack);
+                    registerAccount(rl, callBack, isInitialRegistration);
                 }
             });
             return;
@@ -62,8 +63,8 @@ function registerAccount(rl, callBack) {
             if (answer && answer.trim().toUpperCase() === "Y") {
                 callBack();
             } else {
-                // Allow user to register another account (overwrites existing)
-                registerAccount(rl, callBack);
+                // Allow user to rename the account during initial registration
+                registerAccount(rl, callBack, isInitialRegistration);
             }
         });
     });
