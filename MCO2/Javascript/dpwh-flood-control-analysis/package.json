@@ -15,7 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "papaparse": "^5.4.1",
+    "csv-parser": "^3.0.0",
     "dayjs": "^1.11.10"
   }
 }
