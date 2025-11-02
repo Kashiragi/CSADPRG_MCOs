@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs::File;
 use std::path::Path;
 
 use chrono::NaiveDate;
@@ -109,9 +108,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Invalid rows: {}", invalid);
     println!("Stored {} Project structs in memory.", stored_projects.len());
 
-    // Example: do something with stored_projects if you want
-    // println!("{:#?}", stored_projects.get(0));
-
     Ok(())
 }
 
@@ -140,7 +136,21 @@ fn parse_f64_tolerant(token_opt: Option<String>) -> Result<Option<f64>, String> 
         return Ok(None);
     }
 
-    // Remove common non-numeric decorations (commas, currency symbols, spaces, parentheses)
+    // reject if there are any alphabetic letters (e.g. "MYCA with Project ID P00421301LZ")
+    if s.chars().any(|c| c.is_alphabetic()) {
+        return Err(format!("invalid float token (contains letters): '{}'", s));
+    }
+
+    /*
+    // handle parentheses that indicate negative numbers like "(1,234.56)"
+    let (negative, inner) = if s.starts_with('(') && s.ends_with(')') {
+        (true, &s[1..s.len()-1])
+    } else {
+        (false, s.as_str())
+    };
+    */
+
+    // Remove common non-numeric decorations (commas, currency symbols, spaces)
     let cleaned: String = s.chars()
         .filter(|c| matches!(c, '0'..='9' | '.' | '-' ))
         .collect();
@@ -150,18 +160,24 @@ fn parse_f64_tolerant(token_opt: Option<String>) -> Result<Option<f64>, String> 
     }
 
     match cleaned.parse::<f64>() {
-        Ok(v) => Ok(Some(v)),
+        Ok(v) => {
+            //if negative { v = -v; }
+            Ok(Some(v))
+        },
         Err(_) => Err(format!("invalid float token '{}'", s)),
     }
 }
 
 /// Parse a u32-like token (year, count) tolerant; returns Option<u32> or Err message.
+/// stricter: reject fractional years like "2021.5"
 fn parse_u32_tolerant(token_opt: Option<String>) -> Result<Option<u32>, String> {
     match parse_f64_tolerant(token_opt)? {
         None => Ok(None),
         Some(f) => {
             if f < 0.0 {
                 Err("negative integer".to_string())
+            } else if f.fract() != 0.0 {
+                Err(format!("not an integer: {}", f))
             } else {
                 Ok(Some(f as u32))
             }
@@ -184,6 +200,20 @@ fn parse_date_yyyy_mm_dd(token_opt: Option<String>) -> Result<Option<NaiveDate>,
     }
 }
 
+/// validate funding year falls in inclusive range [2021, 2023]
+fn validate_funding_year_range(funding_year_opt: &Option<u32>) -> Result<(), String> {
+    match funding_year_opt {
+        None => Err("missing FundingYear".to_string()),
+        Some(y) => {
+            if (2021..=2023).contains(y) {
+                Ok(())
+            } else {
+                Err(format!("FundingYear {} out of accepted range 2021-2023", y))
+            }
+        }
+    }
+}
+
 /// Parse a CSV record into Project and collect validation errors.
 /// Returns (Some(Project) or None if major failure, Vec<error_msgs>).
 fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usize>) -> (Option<Project>, Vec<String>) {
@@ -192,14 +222,14 @@ fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usiz
     // helper closure to get by PascalCase header name (as in the CSV)
     let get = |h: &str| get_field(rec, header_map, h);
 
-    // required fields
+    // required fields: treat missing/empty as error
     let project_id = get("ProjectId");
-    if project_id.as_ref().map(|s| s.is_empty()).unwrap_or(true) {
+    if project_id.is_none() {
         errors.push("missing ProjectId".to_string());
     }
 
     let project_name = get("ProjectName");
-    if project_name.as_ref().map(|s| s.is_empty()).unwrap_or(true) {
+    if project_name.is_none() {
         errors.push("missing ProjectName".to_string());
     }
 
@@ -208,6 +238,11 @@ fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usiz
         Ok(v) => v,
         Err(e) => { errors.push(format!("FundingYear: {}", e)); None }
     };
+
+    // funding_year must be present and inside 2021..=2023
+    if let Err(e) = validate_funding_year_range(&funding_year) {
+        errors.push(e);
+    }
 
     let approved_budget_for_contract = match parse_f64_tolerant(get("ApprovedBudgetForContract")) {
         Ok(v) => v,
@@ -278,6 +313,6 @@ fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usiz
         provincial_capital_longitude: provcap_lon,
     };
 
-    // If we had missing required fields or parse errors, return errors.
+    // return project plus any collected errors
     (Some(project), errors)
 }
