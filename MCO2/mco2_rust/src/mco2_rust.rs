@@ -222,15 +222,36 @@ fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usiz
     // helper closure to get by PascalCase header name (as in the CSV)
     let get = |h: &str| get_field(rec, header_map, h);
 
-    // required fields: treat missing/empty as error
-    let project_id = get("ProjectId");
-    if project_id.is_none() {
-        errors.push("missing ProjectId".to_string());
-    }
+    // list required fields here
+    let required = [
+        "MainIsland",
+        "Region",
+        "Province",
+        "LegislativeDistrict",
+        "Municipality",
+        "DistrictEngineeringOffice",
+        "ProjectId",
+        "ProjectName",
+        "TypeOfWork",
+        "FundingYear",
+        "ContractId",
+        "ApprovedBudgetForContract",
+        "ContractCost",
+        "ActualCompletionDate",
+        "Contractor",
+        "ContractorCount",
+        "StartDate",
+        "ProjectLatitude",
+        "ProjectLongitude",
+        "ProvincialCapital",
+        "ProvincialCapitalLatitude",
+        "ProvincialCapitalLongitude",
+    ];
 
-    let project_name = get("ProjectName");
-    if project_name.is_none() {
-        errors.push("missing ProjectName".to_string());
+    for &field in required.iter() {
+        if get(field).is_none() {
+            errors.push(format!("missing {}", field));
+        }
     }
 
     // parse numerics with tolerant parsers
@@ -295,8 +316,8 @@ fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usiz
         legislative_district: get("LegislativeDistrict"),
         municipality: get("Municipality"),
         district_engineering_office: get("DistrictEngineeringOffice"),
-        project_id: project_id.clone(),
-        project_name: project_name.clone(),
+        project_id: get("ProjectId"),
+        project_name: get("ProjectName"),
         type_of_work: get("TypeOfWork"),
         funding_year,
         contract_id: get("ContractId"),
@@ -313,6 +334,5 @@ fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usiz
         provincial_capital_longitude: provcap_lon,
     };
 
-    // return project plus any collected errors
     (Some(project), errors)
 }
