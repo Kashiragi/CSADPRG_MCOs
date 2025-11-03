@@ -99,7 +99,7 @@ function generateCostOverrunTrendsReport(data, options = {}) {
     TotalProjects: entry.totalProjects,
     AvgCostSavings: formatNumber(entry.avgCostSavings, 2),
     OverrunRate: formatNumber(entry.overrunRate, 2),
-    YoYChangePercent: entry.yoyChange !== null ? formatNumber(entry.yoyChange, 2) : 'N/A (Baseline)'
+    YoYChangePercent: formatNumber(entry.yoyChange !== null ? entry.yoyChange : 0, 2)
   }));
   
   // Write to CSV
