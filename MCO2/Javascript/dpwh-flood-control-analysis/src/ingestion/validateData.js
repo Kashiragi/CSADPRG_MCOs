@@ -118,7 +118,7 @@ function validateRow(row, rowIndex) {
 /**
  * Validates the entire dataset
  * @param {Array} data - Array of data rows
- * @returns {Object} - Validation results with statistics
+ * @returns {Object} - Validation results with statistics and filtered valid data
  */
 function validateData(data) {
   logSection('STARTING DATA VALIDATION');
@@ -127,6 +127,8 @@ function validateData(data) {
   let validRows = 0;
   let invalidRows = 0;
   const allIssues = [];
+  const validData = [];  // Store only valid rows
+  const invalidData = []; // Store invalid rows for reference
   
   // Track missing fields count
   const missingFields = {
@@ -154,8 +156,10 @@ function validateData(data) {
     
     if (validation.isValid) {
       validRows++;
+      validData.push(row);  // Keep only valid rows
     } else {
       invalidRows++;
+      invalidData.push({ row, issues: validation.issues });
       allIssues.push(...validation.issues);
       
       // Count specific missing fields
@@ -184,6 +188,8 @@ function validateData(data) {
     totalRows: data.length,
     validRows: validRows,
     invalidRows: invalidRows,
+    validData: validData,      // Return only valid rows
+    invalidData: invalidData,  // Return invalid rows for reference
     missingFields: missingFields,
     issues: allIssues,
     validationDate: new Date().toISOString()

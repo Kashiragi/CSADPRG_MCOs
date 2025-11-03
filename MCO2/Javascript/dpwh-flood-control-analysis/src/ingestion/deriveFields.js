@@ -177,21 +177,29 @@ async function testDeriveFields() {
     
     // Import dependencies
     const { readData } = require('./readData');
+    const { validateData } = require('./validateData');
     const { cleanData } = require('./cleanData');
     const { clearLog } = require('../services/loggingService');
     
     // Clear log
     clearLog();
     
-    // Read and clean data
+    // Read, validate, and clean data
     const rawData = await readData();
-    const cleanedData = cleanData(rawData, { logResults: true });
+    const validationResults = validateData(rawData);
+    const cleanedData = cleanData(validationResults.validData, { 
+      logResults: true,
+      originalCount: rawData.length
+    });
     
     // Derive fields
     const dataWithDerivedFields = deriveFields(cleanedData, { logResults: true });
     
     console.log('\n[RESULT] Field derivation completed!');
-    console.log(`  Processed rows: ${dataWithDerivedFields.length}`);
+    console.log(`  Original CSV rows: ${rawData.length}`);
+    console.log(`  Valid rows after validation: ${validationResults.validData.length}`);
+    console.log(`  Cleaned rows after filters: ${cleanedData.length}`);
+    console.log(`  Final processed rows: ${dataWithDerivedFields.length}`);
     
     // Show sample record with derived fields
     console.log('\n[SAMPLE] First record with derived fields:');

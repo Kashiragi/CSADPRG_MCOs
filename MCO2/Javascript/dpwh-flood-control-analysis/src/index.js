@@ -72,25 +72,33 @@ async function loadFile() {
     const rawData = await readData();
     rawDataCount = rawData.length;
     
-    // Validate (silent)
-    validateData(rawData);
+    // Validate data and get only valid rows
+    const validationResults = validateData(rawData);
+    const validData = validationResults.validData;
     
-    // Clean data
-    const cleanedData = cleanData(rawData, {
+    // Clean data (using only validated rows)
+    const cleanedData = cleanData(validData, {
       startYear: 2021,
       endYear: 2023,
       dropMissingCoords: true,
-      logResults: false
+      logResults: false,  // Silent mode for UI
+      originalCount: rawDataCount
     });
     cleanedDataCount = cleanedData.length;
     
     // Derive fields
     processedData = deriveFields(cleanedData, { logResults: false });
     
-    console.log(`(${rawDataCount.toLocaleString()} rows loaded, ${cleanedDataCount.toLocaleString()} filtered for 2021-2023)`);
+    console.log(`\n[SUCCESS] Data loaded and processed!`);
+    console.log(`  Original rows: ${rawDataCount}`);
+    console.log(`  Valid rows after validation: ${validData.length}`);
+    console.log(`  Filtered rows (2021-2023): ${cleanedDataCount}`);
+    console.log(`  Invalid rows removed: ${rawDataCount - validData.length}`);
+    console.log(`  Year filter removed: ${validData.length - cleanedDataCount}`);
     
   } catch (error) {
-    console.error('\n[ERROR] Failed to load file:', error.message);
+    console.error('[ERROR] Failed to load data:', error.message);
+    throw error;
   }
 }
 

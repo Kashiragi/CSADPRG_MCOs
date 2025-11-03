@@ -151,35 +151,42 @@ function handleMissingCoordinates(data, dropMissingCoords = true) {
 
 /**
  * Main cleaning function - orchestrates all cleaning operations
- * @param {Array} rawData - Raw data array from CSV
+ * @param {Array} validatedData - Validated data array (should be only valid rows)
  * @param {Object} options - Cleaning options
  * @returns {Array} - Cleaned and filtered data array
  */
-function cleanData(rawData, options = {}) {
+function cleanData(validatedData, options = {}) {
   const {
     startYear = 2021,
     endYear = 2023,
     dropMissingCoords = true,
-    logResults = true
+    logResults = true,
+    originalCount = null  // Original row count before validation
   } = options;
   
   if (logResults) {
     logSection('STARTING DATA CLEANING');
-    logInfo(`Input rows: ${rawData.length}`);
+    if (originalCount) {
+      logInfo(`Original CSV rows: ${originalCount}`);
+      logInfo(`Valid rows after validation: ${validatedData.length}`);
+      logInfo(`Invalid rows removed: ${originalCount - validatedData.length}`);
+    } else {
+      logInfo(`Input rows: ${validatedData.length}`);
+    }
     logInfo(`Year filter: ${startYear} - ${endYear}`);
     logInfo(`Drop missing coordinates: ${dropMissingCoords}`);
   }
   
   // Step 1: Clean and convert data types
   if (logResults) logInfo('Step 1: Converting data types...');
-  const cleanedData = rawData.map(row => cleanRow(row));
+  const cleanedData = validatedData.map(row => cleanRow(row));
   
   // Step 2: Filter by years
   if (logResults) logInfo('Step 2: Filtering by funding years...');
   const yearFiltered = filterByYears(cleanedData, startYear, endYear);
   if (logResults) {
     logInfo(`Rows after year filter (${startYear}-${endYear}): ${yearFiltered.length}`);
-    logInfo(`Rows removed: ${cleanedData.length - yearFiltered.length}`);
+    logInfo(`Rows removed by year filter: ${cleanedData.length - yearFiltered.length}`);
   }
   
   // Step 3: Handle missing coordinates
@@ -194,12 +201,20 @@ function cleanData(rawData, options = {}) {
   // Calculate and log statistics
   if (logResults) {
     logSection('DATA CLEANING SUMMARY');
-    logInfo(`Original rows: ${rawData.length}`);
+    if (originalCount) {
+      logInfo(`Original CSV rows: ${originalCount}`);
+      logInfo(`After validation: ${validatedData.length}`);
+    } else {
+      logInfo(`Input rows: ${validatedData.length}`);
+    }
     logInfo(`After type conversion: ${cleanedData.length}`);
     logInfo(`After year filter: ${yearFiltered.length}`);
     logInfo(`Final cleaned rows: ${coordFiltered.length}`);
-    logInfo(`Total removed: ${rawData.length - coordFiltered.length} (${((rawData.length - coordFiltered.length) / rawData.length * 100).toFixed(2)}%)`);
-    logInfo(`Data retention rate: ${(coordFiltered.length / rawData.length * 100).toFixed(2)}%`);
+    
+    const totalRemoved = originalCount ? originalCount - coordFiltered.length : validatedData.length - coordFiltered.length;
+    const baseCount = originalCount || validatedData.length;
+    logInfo(`Total removed: ${totalRemoved} (${((totalRemoved / baseCount) * 100).toFixed(2)}%)`);
+    logInfo(`Data retention rate: ${(coordFiltered.length / baseCount * 100).toFixed(2)}%`);
     
     // Log data quality metrics
     const nullBudgets = coordFiltered.filter(r => r.approvedBudgetForContract === null).length;
@@ -224,24 +239,31 @@ async function testCleanData() {
     
     // Import dependencies
     const { readData } = require('./readData');
+    const { validateData } = require('./validateData');
     const { clearLog } = require('../services/loggingService');
     
     // Clear log and read data
     clearLog();
     const rawData = await readData();
     
-    // Clean data with default options
-    const cleanedData = cleanData(rawData, {
+    // Validate data first
+    console.log('\n[INFO] Validating data...');
+    const validationResults = validateData(rawData);
+    
+    // Clean data with validated rows only
+    const cleanedData = cleanData(validationResults.validData, {
       startYear: 2021,
       endYear: 2023,
       dropMissingCoords: true,
-      logResults: true
+      logResults: true,
+      originalCount: rawData.length
     });
     
     console.log('\n[RESULT] Cleaning completed!');
-    console.log(`  Original rows: ${rawData.length}`);
-    console.log(`  Cleaned rows: ${cleanedData.length}`);
-    console.log(`  Retention rate: ${(cleanedData.length / rawData.length * 100).toFixed(2)}%`);
+    console.log(`  Original CSV rows: ${rawData.length}`);
+    console.log(`  Valid rows after validation: ${validationResults.validData.length}`);
+    console.log(`  Final cleaned rows: ${cleanedData.length}`);
+    console.log(`  Overall retention rate: ${(cleanedData.length / rawData.length * 100).toFixed(2)}%`);
     
     // Show sample cleaned row
     console.log('\n[SAMPLE] First cleaned row:');
