@@ -57,16 +57,20 @@ function validateRow(row, rowIndex) {
   const issues = [];
   const rowNum = rowIndex + 1;
 
-  // Check required text fields
+  // Check ALL required text fields (no empty strings allowed)
   const requiredTextFields = [
     'MainIsland',
     'Region',
     'Province',
+    'LegislativeDistrict',
+    'Municipality',
+    'DistrictEngineeringOffice',
     'ProjectId',
     'ProjectName',
     'TypeOfWork',
     'ContractId',
-    'Contractor'
+    'Contractor',
+    'ProvincialCapital'
   ];
 
   requiredTextFields.forEach(field => {
@@ -75,17 +79,17 @@ function validateRow(row, rowIndex) {
     }
   });
 
-  // Check date fields
+  // Check date fields (both must be present and valid)
   const dateFields = ['StartDate', 'ActualCompletionDate'];
   dateFields.forEach(field => {
-    if (!isMissing(row[field]) && !isValidDate(row[field])) {
-      issues.push(`Row ${rowNum}: Invalid date format in ${field}: ${row[field]}`);
-    } else if (isMissing(row[field])) {
+    if (isMissing(row[field])) {
       issues.push(`Row ${rowNum}: Missing ${field}`);
+    } else if (!isValidDate(row[field])) {
+      issues.push(`Row ${rowNum}: Invalid date format in ${field}: ${row[field]}`);
     }
   });
 
-  // Check numeric fields
+  // Check ALL numeric fields (must be present and valid numbers)
   const numericFields = [
     'FundingYear',
     'ApprovedBudgetForContract',
@@ -94,19 +98,29 @@ function validateRow(row, rowIndex) {
   ];
 
   numericFields.forEach(field => {
-    if (!isValidNumber(row[field])) {
-      issues.push(`Row ${rowNum}: Invalid or missing number in ${field}: ${row[field]}`);
+    if (isMissing(row[field])) {
+      issues.push(`Row ${rowNum}: Missing ${field}`);
+    } else if (!isValidNumber(row[field])) {
+      issues.push(`Row ${rowNum}: Invalid number format in ${field}: ${row[field]}`);
     }
   });
 
-  // Check coordinates (project location)
+  // Check project coordinates (both latitude and longitude must be valid)
   if (!isValidCoordinates(row.ProjectLatitude, row.ProjectLongitude)) {
-    issues.push(`Row ${rowNum}: Invalid project coordinates (Lat: ${row.ProjectLatitude}, Lon: ${row.ProjectLongitude})`);
+    if (isMissing(row.ProjectLatitude) || isMissing(row.ProjectLongitude)) {
+      issues.push(`Row ${rowNum}: Missing project coordinates (Lat: ${row.ProjectLatitude}, Lon: ${row.ProjectLongitude})`);
+    } else {
+      issues.push(`Row ${rowNum}: Invalid project coordinates (Lat: ${row.ProjectLatitude}, Lon: ${row.ProjectLongitude})`);
+    }
   }
 
-  // Check coordinates (provincial capital)
+  // Check provincial capital coordinates (both latitude and longitude must be valid)
   if (!isValidCoordinates(row.ProvincialCapitalLatitude, row.ProvincialCapitalLongitude)) {
-    issues.push(`Row ${rowNum}: Invalid provincial capital coordinates (Lat: ${row.ProvincialCapitalLatitude}, Lon: ${row.ProvincialCapitalLongitude})`);
+    if (isMissing(row.ProvincialCapitalLatitude) || isMissing(row.ProvincialCapitalLongitude)) {
+      issues.push(`Row ${rowNum}: Missing provincial capital coordinates (Lat: ${row.ProvincialCapitalLatitude}, Lon: ${row.ProvincialCapitalLongitude})`);
+    } else {
+      issues.push(`Row ${rowNum}: Invalid provincial capital coordinates (Lat: ${row.ProvincialCapitalLatitude}, Lon: ${row.ProvincialCapitalLongitude})`);
+    }
   }
 
   return {
@@ -135,11 +149,15 @@ function validateData(data) {
     MainIsland: 0,
     Region: 0,
     Province: 0,
+    LegislativeDistrict: 0,
+    Municipality: 0,
+    DistrictEngineeringOffice: 0,
     ProjectId: 0,
     ProjectName: 0,
     TypeOfWork: 0,
     ContractId: 0,
     Contractor: 0,
+    ProvincialCapital: 0,
     StartDate: 0,
     ActualCompletionDate: 0,
     FundingYear: 0,
@@ -167,19 +185,23 @@ function validateData(data) {
         if (issue.includes('Missing MainIsland')) missingFields.MainIsland++;
         if (issue.includes('Missing Region')) missingFields.Region++;
         if (issue.includes('Missing Province')) missingFields.Province++;
+        if (issue.includes('Missing LegislativeDistrict')) missingFields.LegislativeDistrict++;
+        if (issue.includes('Missing Municipality')) missingFields.Municipality++;
+        if (issue.includes('Missing DistrictEngineeringOffice')) missingFields.DistrictEngineeringOffice++;
         if (issue.includes('Missing ProjectId')) missingFields.ProjectId++;
         if (issue.includes('Missing ProjectName')) missingFields.ProjectName++;
         if (issue.includes('Missing TypeOfWork')) missingFields.TypeOfWork++;
         if (issue.includes('Missing ContractId')) missingFields.ContractId++;
         if (issue.includes('Missing Contractor')) missingFields.Contractor++;
+        if (issue.includes('Missing ProvincialCapital')) missingFields.ProvincialCapital++;
         if (issue.includes('Missing StartDate')) missingFields.StartDate++;
         if (issue.includes('Missing ActualCompletionDate')) missingFields.ActualCompletionDate++;
-        if (issue.includes('Invalid or missing number in FundingYear')) missingFields.FundingYear++;
-        if (issue.includes('Invalid or missing number in ApprovedBudgetForContract')) missingFields.ApprovedBudgetForContract++;
-        if (issue.includes('Invalid or missing number in ContractCost')) missingFields.ContractCost++;
-        if (issue.includes('Invalid or missing number in ContractorCount')) missingFields.ContractorCount++;
-        if (issue.includes('Invalid project coordinates')) missingFields.ProjectCoordinates++;
-        if (issue.includes('Invalid provincial capital coordinates')) missingFields.CapitalCoordinates++;
+        if (issue.includes('Missing FundingYear')) missingFields.FundingYear++;
+        if (issue.includes('Missing ApprovedBudgetForContract') || issue.includes('Invalid number format in ApprovedBudgetForContract')) missingFields.ApprovedBudgetForContract++;
+        if (issue.includes('Missing ContractCost') || issue.includes('Invalid number format in ContractCost')) missingFields.ContractCost++;
+        if (issue.includes('Missing ContractorCount') || issue.includes('Invalid number format in ContractorCount')) missingFields.ContractorCount++;
+        if (issue.includes('project coordinates')) missingFields.ProjectCoordinates++;
+        if (issue.includes('provincial capital coordinates')) missingFields.CapitalCoordinates++;
       });
     }
   });
