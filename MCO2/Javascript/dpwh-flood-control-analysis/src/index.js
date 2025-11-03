@@ -193,7 +193,7 @@ function displayReport3(report3) {
   // Display top 15 rows
   const displayData = report3.data.slice(0, 15);
   displayData.forEach((row) => {
-    const yoyDisplay = row.yoyChange !== null ? row.yoyChange.toFixed(2) : 'Baseline';
+    const yoyDisplay = row.yoyChange !== null ? row.yoyChange.toFixed(2) : '0.00';
     const values = [
       row.fundingYear.toString(),
       row.typeOfWork.substring(0, 48),
