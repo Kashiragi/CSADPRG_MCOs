@@ -34,6 +34,20 @@ function determineRiskLevel(reliabilityIndex) {
 }
 
 /**
+ * Splits contractor string and returns array of individual contractors
+ * @param {string} contractorString - Contractor name(s), potentially with "/" separator
+ * @returns {Array} - Array of individual contractor names
+ */
+function splitContractors(contractorString) {
+  if (!contractorString) return [];
+  
+  return contractorString
+    .split('/')
+    .map(c => c.trim())
+    .filter(c => c.length > 0);
+}
+
+/**
  * Generates Contractor Ranking Report
  * @param {Array} data - Processed data with derived fields
  * @param {Object} options - Report options
@@ -49,8 +63,27 @@ function generateContractorRankingReport(data, options = {}) {
     logInfo(`Top: ${topN} contractors`);
   }
   
-  // Group by contractor
-  const grouped = _.groupBy(data, 'contractor');
+  // Create expanded data with split contractors
+  const expandedProjects = [];
+  data.forEach(project => {
+    const contractors = splitContractors(project.contractor);
+    const contractorCount = contractors.length || 1;
+    
+    // Create a project entry for each contractor (with fractional attribution)
+    contractors.forEach(individualContractor => {
+      expandedProjects.push({
+        contractor: individualContractor,
+        contractCost: (project.contractCost || 0) / contractorCount,
+        costSavings: project.costSavings !== null ? project.costSavings / contractorCount : null,
+        completionDelayDays: project.completionDelayDays,
+        contractorCount: contractorCount,
+        originalProject: project
+      });
+    });
+  });
+  
+  // Group by individual contractor
+  const grouped = _.groupBy(expandedProjects, 'contractor');
   
   const contractorStats = [];
   
@@ -58,8 +91,8 @@ function generateContractorRankingReport(data, options = {}) {
     // Filter contractors with minimum project count
     if (projects.length < minProjects) return;
     
-    // Calculate total contract cost
-    const totalContractCost = _.sumBy(projects, p => p.contractCost || 0);
+    // Calculate total contract cost (sum of fractional attributions)
+    const totalContractCost = _.sumBy(projects, p => p.contractCost);
     
     // Calculate number of projects
     const projectCount = projects.length;
@@ -72,7 +105,7 @@ function generateContractorRankingReport(data, options = {}) {
       ? _.mean(validDelays) 
       : 0;
     
-    // Calculate total cost savings
+    // Calculate total cost savings (sum of fractional attributions)
     const validSavings = projects
       .filter(p => p.costSavings !== null)
       .map(p => p.costSavings);
@@ -175,6 +208,7 @@ module.exports = {
   generateContractorRankingReport,
   calculateReliabilityIndex,
   determineRiskLevel,
+  splitContractors,
   testReport2
 };
 
