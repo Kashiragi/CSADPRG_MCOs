@@ -2,6 +2,7 @@
 // Computes calculated fields like CostSavings, CompletionDelayDays, and other metrics
 
 const { logInfo, logSection } = require('../services/loggingService');
+const { writeCSV } = require('../utils/csvUtils');
 
 /**
  * Calculates the number of days between two dates
@@ -130,7 +131,7 @@ function deriveRowFields(row) {
  * @returns {Array} - Array with derived fields added
  */
 function deriveFields(cleanedData, options = {}) {
-  const { logResults = true } = options;
+  const { logResults = true, persist = false, filename = 'cleaned_with_derived.csv' } = options;
   
   if (logResults) {
     logSection('DERIVING CALCULATED FIELDS');
@@ -140,6 +141,47 @@ function deriveFields(cleanedData, options = {}) {
   // Add derived fields to each row
   const dataWithDerivedFields = cleanedData.map(row => deriveRowFields(row));
   
+  // Persist to CSV if requested
+  if (persist) {
+    try {
+      const exportData = dataWithDerivedFields.map(r => ({
+        MainIsland: r.mainIsland,
+        Region: r.region,
+        Province: r.province,
+        LegislativeDistrict: r.legislativeDistrict,
+        Municipality: r.municipality,
+        DistrictEngineeringOffice: r.districtEngineeringOffice,
+        ProjectId: r.projectId,
+        ProjectName: r.projectName,
+        TypeOfWork: r.typeOfWork,
+        FundingYear: r.fundingYear,
+        ContractId: r.contractId,
+        ApprovedBudgetForContract: r.approvedBudgetForContract,
+        ContractCost: r.contractCost,
+        Contractor: r.contractor,
+        ContractorCount: r.contractorCount,
+        StartDate: r.startDate ? (r.startDate.toISOString().split('T')[0]) : '',
+        ActualCompletionDate: r.actualCompletionDate ? (r.actualCompletionDate.toISOString().split('T')[0]) : '',
+        ProjectLatitude: r.projectLatitude,
+        ProjectLongitude: r.projectLongitude,
+        ProvincialCapital: r.provincialCapital,
+        ProvincialCapitalLatitude: r.provincialCapitalLatitude,
+        ProvincialCapitalLongitude: r.provincialCapitalLongitude,
+        CostSavings: r.costSavings,
+        CostOverrunPercentage: r.costOverrunPercentage,
+        IsOverBudget: r.isOverBudget,
+        CompletionDelayDays: r.completionDelayDays,
+        CompletionMonths: r.completionMonths,
+        BudgetUtilizationRate: r.budgetUtilizationRate
+      }));
+
+      const outPath = writeCSV(filename, exportData);
+      if (logResults) logInfo(`Persisted derived dataset to: ${outPath}`);
+    } catch (err) {
+      if (logResults) logInfo(`Failed to persist derived dataset: ${err.message}`);
+    }
+  }
+
   if (logResults) {
     // Calculate statistics
     const validCostSavings = dataWithDerivedFields.filter(r => r.costSavings !== null).length;
@@ -192,8 +234,8 @@ async function testDeriveFields() {
       originalCount: rawData.length
     });
     
-    // Derive fields
-    const dataWithDerivedFields = deriveFields(cleanedData, { logResults: true });
+  // Derive fields and persist the derived dataset to CSV
+  const dataWithDerivedFields = deriveFields(cleanedData, { logResults: true, persist: true, filename: 'cleaned_with_derived.csv' });
     
     console.log('\n[RESULT] Field derivation completed!');
     console.log(`  Original CSV rows: ${rawData.length}`);
