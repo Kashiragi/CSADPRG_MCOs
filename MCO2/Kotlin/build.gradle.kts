@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("org.jetbrains.kotlinx:dataframe:1.0.0-Beta3")
 }
 
 tasks.test {
