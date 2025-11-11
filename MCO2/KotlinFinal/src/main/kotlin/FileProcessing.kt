@@ -31,7 +31,7 @@ interface Schema{
     val ProvincialCapitalLatitude: Double?
     val ProvincialCapitalLongitude: Double?
 }
-fun ReadRawFile(path: String): DataFrame{
+fun ReadRawFile(path: String): DataFrame<*>{
     val raw = DataFrame
         .readCsv(
             File(path)
@@ -46,7 +46,7 @@ fun ReadRawFile(path: String): DataFrame{
     print("${df.count()} rows loaded")
     return df
 }
-fun CleanDataFrame(df: DataFrame): DataFrame{
+fun CleanDataFrame(df: DataFrame<*>): DataFrame<*>{
     // exclude invalid values
     //val columns = listOf("MainIsland","Region","Province","LegislativeDistrict","Municipality","DistrictEngineeringOffice","ProjectId","ProjectName","TypeOfWork","FundingYear","ContractId","ApprovedBudgetForContract","ContractCost","ActualCompletionDate","Contractor","ContractorCount","StartDate","ProjectLatitude","ProjectLongitude","ProvincialCapital","ProvincialCapitalLatitude","ProvincialCapitalLongitude")
     //
@@ -58,24 +58,19 @@ fun CleanDataFrame(df: DataFrame): DataFrame{
     // this makes life simpler oop-
     val cleanDf = df.dropNulls()
 
-    val cleanCount= cleanDf.count()
-    println("original count: ${df.count()}")
-    println("new Count: $cleanCount")
-
     val validYearsDf = cleanDf
         .filter { row ->
         val year = row["FundingYear"] as Int
 
-        year!=null && year in 2021..2023
+        year!=null && (year in 2021..2023)
     }
-    val validYearsCount = validYearsDf.count()
-    println(validYearsCount)
 
-    print("${cleanDf.count()} filtered for 2021-2023")
-    return cleanDf
+
+    print("${validYearsDf.count()} filtered for 2021-2023")
+    return validYearsDf
 }
 
-fun ComputeNewColumns(df: DataFrame): DataFrame{
+fun ComputeNewColumns(df: DataFrame<*>): DataFrame<*>{
 
     val withNewCols = df
         .add("CostSavings") { row ->
@@ -84,10 +79,20 @@ fun ComputeNewColumns(df: DataFrame): DataFrame{
             budget - cost
         }
         .add("CompletionDelayDays") {row ->
-            val start: LocalDate = row["StartDate"] as? LocalDate
+            val start = row["StartDate"] as? LocalDate
             val end = row["ActualCompletionDate"] as? LocalDate
             if(start!=null && end!=null) ChronoUnit.DAYS.between(start, end)
-            else 0
+            else null
         }
     return withNewCols
+}
+
+fun OutputCSV(df: DataFrame<*>, filenameWExtension: String){
+    try {
+        val outCsv = File(filenameWExtension)
+        df.writeCsv(outCsv)
+        println("Full table exported to ${filenameWExtension}")
+    } catch (e: Exception){
+        println("Unable to export full table to ${filenameWExtension}")
+    }
 }
