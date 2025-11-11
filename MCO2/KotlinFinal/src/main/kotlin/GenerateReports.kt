@@ -18,7 +18,7 @@ fun GenerateReport1(data: DataFrame<*>): DataFrame<*>{
             .with { (it as Number).toDouble() }
         .select("Region", "MainIsland", "ApprovedBudgetForContract", "CostSavings", "CompletionDelayDays")
 
-    var groupedByRegion = df_1
+    val groupedByRegion = df_1
         .groupBy("Region", "MainIsland")
         .aggregate{
             sum( "ApprovedBudgetForContract" ) into "TotalBudget"
@@ -38,23 +38,22 @@ fun GenerateReport1(data: DataFrame<*>): DataFrame<*>{
             val median = it["MedianSavings"] as Double
             val avg = it["AvgDelay"] as Double
 
-            if (avg>0) (median/avg / 100).toDouble()
+            if (avg>0) (median/avg * 100.00).toDouble()
             else 0.toDouble()
         }
         .sortByDesc("EfficiencyScore")
+
+    val minScore: Double = groupedByRegion.min("EfficiencyScore") as Double
+    val maxScore: Double = groupedByRegion.max("EfficiencyScore") as Double
+    val processedDf = groupedByRegion
         .update("EfficiencyScore").with {
             val rawScore = this["EfficiencyScore"] as Double
-            // Find min and max raw scores across all regions
-            val minScore = min{"EfficiencyScore"}
-            val maxScore = max{"EfficiencyScore"}
             // Normalize each score
             normalizeScore(rawScore, minScore, maxScore);
         }
-    print(groupedByRegion)
-    return groupedByRegion
+    print(processedDf)
+    return processedDf
 }
-
-
 
 fun GenerateReport2(data: DataFrame<*>): DataFrame<*>{
     val df = data
