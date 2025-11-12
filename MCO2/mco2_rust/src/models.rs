@@ -1,5 +1,79 @@
 use chrono::NaiveDate;
+use thousands::Separable;
+use tabled::Tabled;
 
+/// format helpers — signatures must be `fn(&T) -> String`
+fn fmt_currency(v: &f64) -> String {
+    format!("{:.2}", v).separate_with_commas()
+}
+
+fn fmt_flt(v: &f64) -> String {
+    format!("{:.2}", v)
+}
+
+#[derive(Debug, Tabled, Clone)]
+pub struct EfficiencyRow {
+    #[tabled(display = "String::from")]
+    pub(crate) region: String,
+
+    #[tabled(display = "String::from")]
+    pub(crate) main_island: String,
+
+    #[tabled(display = "fmt_currency")]
+    pub(crate) total_budget: f64,
+
+    #[tabled(display = "fmt_currency")]
+    pub(crate) median_savings: f64,
+
+    #[tabled(display = "fmt_flt")]
+    pub(crate) avg_delay_days: f64,
+
+    #[tabled(display = "fmt_flt")]
+    pub(crate) pct_delayed_over_30: f64,
+
+    #[tabled(display = "fmt_flt")]
+    pub(crate) efficiency_score: f64,
+}
+
+fn fmt_int(v: &usize) -> String {
+    format!("{}", v)
+}
+
+fn fmt_risk(v: &f64) -> String {
+    let risk = if *v < 50.0 {
+        "High Risk".to_string()
+    } else { "Low Risk".to_string() };
+    risk
+}
+
+#[derive(Debug, Tabled, Clone)]
+pub struct ContractorRow {
+    #[tabled(display = "fmt_int")]
+    pub(crate) rank: usize,
+
+    #[tabled(display = "String::from")]
+    pub(crate) contractor: String,
+
+    #[tabled(display = "fmt_currency")]
+    pub(crate) total_cost_savings: f64,
+
+    #[tabled(display = "fmt_int")]
+    pub(crate) projects: usize,
+
+    #[tabled(display = "fmt_flt")]
+    pub(crate) avg_delay_days: f64,
+
+    #[tabled(display = "fmt_currency")]
+    pub(crate) total_contract_cost: f64,
+
+    #[tabled(display = "fmt_flt")]
+    pub(crate) reliability_index: f64,
+
+    #[tabled(display = "fmt_risk")]
+    pub(crate) risk_flag: f64, // duplicate of reliability in pct for quick inspection
+}
+
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Project {
     pub main_island: Option<String>,
