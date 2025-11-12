@@ -3,7 +3,7 @@ use std::error::Error;
 
 use chrono::NaiveDate;
 use csv::{ReaderBuilder, StringRecord};
-use num_format::{Locale, ToFormattedString};
+use thousands::Separable;
 
 use crate::models::Project;
 
@@ -50,8 +50,8 @@ pub fn read_csv(path: &str) -> Result<Vec<Project>, Box<dyn Error>> {
 
     println!(
         "Processing dataset... ({} rows loaded, {} rows filtered for 2021-2023",
-        total.to_formatted_string(&Locale::en),
-        valid.to_formatted_string(&Locale::en)
+        total.separate_with_commas(),
+        valid.separate_with_commas()
     );
 
     Ok(stored_projects)
