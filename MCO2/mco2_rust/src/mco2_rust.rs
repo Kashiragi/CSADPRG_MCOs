@@ -4,7 +4,7 @@ mod reports;
 
 use models::Project;
 use csv_processing::read_csv;
-use reports::generate_report_1;
+use reports::{generate_report_1, generate_report_2};
 
 use std::error::Error;
 use std::path::Path;
@@ -54,7 +54,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     println!("Please load the CSV first (option 1) before generating reports.");
                     continue;
                 }
+                println!("Generating reports...");
+                println!("Outputs saved to individual files");
                 generate_report_1(&projects)?;
+                generate_report_2(&projects)?;
             }
 
             MenuOption::Quit => {
