@@ -512,11 +512,11 @@ pub fn generate_summary(projects: &[Project]) -> Result<(), Box<dyn Error>> {
 
     // build summary and write JSON
     let summary = Summary {
-        total_projects,
-        total_contractors,
-        total_provinces,
-        global_avg_delay,
-        total_savings,
+        total_projects: format!("{}", total_projects).separate_with_commas(),
+        total_contractors: format!("{}", total_contractors).separate_with_commas(),
+        total_provinces: format!("{}", total_provinces).separate_with_commas(),
+        global_avg_delay: format!("{:.2}", global_avg_delay).separate_with_commas(),
+        total_savings: format!("{:.2}", total_savings).separate_with_commas(),
     };
 
     let json = serde_json::to_string_pretty(&summary)?;

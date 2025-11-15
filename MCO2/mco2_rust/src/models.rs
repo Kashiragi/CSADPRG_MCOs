@@ -98,11 +98,11 @@ pub struct AnnualProjectRow {
 
 #[derive(Serialize)]
 pub struct Summary {
-    pub(crate) total_projects: usize,
-    pub(crate) total_contractors: usize,
-    pub(crate) total_provinces: usize,
-    pub(crate) global_avg_delay: f64,
-    pub(crate) total_savings: f64,
+    pub(crate) total_projects: String,
+    pub(crate) total_contractors: String,
+    pub(crate) total_provinces: String,
+    pub(crate) global_avg_delay: String,
+    pub(crate) total_savings: String,
 }
 
 #[allow(dead_code)]
