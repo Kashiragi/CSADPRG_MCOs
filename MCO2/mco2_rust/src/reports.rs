@@ -1,12 +1,12 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::cmp::Ordering;
-
+use std::fs;
 use tabled::{Table, settings::Style};
 use thousands::Separable;
 use csv::Writer;
 
-use crate::models::{Project, EfficiencyRow, ContractorRow};
+use crate::models::{Project, EfficiencyRow, ContractorRow, AnnualProjectRow, Summary};
 
 /// Generates "Regional Flood Mitigation Efficiency Summary" CSV.
 ///
@@ -175,28 +175,22 @@ pub fn generate_report_2(projects: &[Project]) -> Result<(), Box<dyn Error>> {
             None => continue,
         };
 
-        let parts: Vec<String> = contractor_field
-            .split('/')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect();
+        let contractor: String = contractor_field.trim().to_string();
 
-        if parts.is_empty() { continue; }
+        if contractor.is_empty() { continue; }
 
-        let n = parts.len() as f64;
-        let contract_cost_per = p.contract_cost.unwrap_or(0.0) / n;
-        let savings_per = p.cost_savings().unwrap_or(0.0) / n;
+        let contract_cost_per = p.contract_cost.unwrap_or(0.0);
+        let savings_per = p.cost_savings().unwrap_or(0.0);
         let delay_opt = p.completion_delay_days().map(|d| d as f64);
 
-        for contractor in parts {
-            let a = aggs.entry(contractor).or_default();
-            a.proj_count += 1;
-            a.total_cost += contract_cost_per;
-            a.total_savings += savings_per;
-            if let Some(d) = delay_opt {
-                a.delay_sum += d;
-                a.delay_count += 1;
-            }
+        let a = aggs.entry(contractor).or_default();
+        a.proj_count += 1;
+        a.total_cost += contract_cost_per;
+        a.total_savings += savings_per;
+
+        if let Some(d) = delay_opt {
+            a.delay_sum += d;
+            a.delay_count += 1;
         }
     }
 
@@ -266,7 +260,7 @@ pub fn generate_report_2(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     wtr.flush()?;
 
     // print preview table
-    let preview_count = rows.len().min(15);
+    let preview_count = rows.len().min(10);
     let preview = &rows[..preview_count];
     let table = Table::new(preview).to_string();
     println!("\nReport 2: Top Contractors Performance Ranking");
@@ -274,6 +268,194 @@ pub fn generate_report_2(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     println!("(Top 15 by TotalCost, >= 5 Projects)");
     println!("{table}");
     println!("(Full table exported to {})", output_path);
+
+    Ok(())
+}
+
+/// Generate Report 3: Annual Project Type Cost Overrun Trends.
+///
+/// Columns order:
+/// Funding Year, Type Of Work, Total Projects, AVG savings, Overrun rate, YoY Change
+pub fn generate_report_3(projects: &[Project]) -> Result<(), Box<dyn Error>> {
+    let output_path = "report3_annual_trends.csv";
+    // group by (funding_year, type_of_work)
+    let mut groups: HashMap<(usize, String), Vec<&Project>> = HashMap::new();
+
+    for p in projects.iter() {
+        let year = match p.funding_year {
+            Some(y) => y as usize,
+            None => continue, // skip projects without funding year
+        };
+        let typ = p.type_of_work.clone().unwrap_or_default();
+        groups.entry((year, typ)).or_default().push(p);
+    }
+
+    // compute avg_savings and overruns per group
+    // first produce raw rows
+    let mut rows: Vec<AnnualProjectRow> = Vec::new();
+    // map for baseline 2021 by type_of_work -> avg_savings
+    let mut baseline_2021: HashMap<String, f64> = HashMap::new();
+
+    for ((year, typ), group) in groups.iter() {
+        let total_projects = group.len();
+
+        // collect savings available
+        let savings_vals: Vec<f64> = group.iter()
+            .filter_map(|p| p.cost_savings())
+            .collect();
+
+        let avg_savings = if savings_vals.is_empty() {
+            0.0
+        } else {
+            savings_vals.iter().sum::<f64>() / (savings_vals.len() as f64)
+        };
+
+        // overrun rate: percent of projects with negative savings among those with savings
+        let overrun_count = savings_vals.iter().filter(|&&s| s < 0.0).count();
+        let overrun_rate = if savings_vals.is_empty() {
+            0.0
+        } else {
+            (overrun_count as f64 / savings_vals.len() as f64) * 100.0
+        };
+
+        // push temporary row (yoy calculated later)
+        rows.push(AnnualProjectRow {
+            funding_year: *year,
+            type_of_work: typ.clone(),
+            total_projects,
+            avg_savings,
+            overrun_rate,
+            yoy_change: 0.0, // placeholder
+        });
+
+        // store baseline if year == 2021
+        if *year == 2021 {
+            baseline_2021.insert(typ.clone(), avg_savings);
+        }
+    }
+
+    // compute YoY change relative to 2021 baseline per type_of_work
+    for row in rows.iter_mut() {
+        let typ = &row.type_of_work;
+        let baseline = baseline_2021.get(typ).copied().unwrap_or(0.0);
+        if baseline.abs() < f64::EPSILON {
+            // baseline zero or missing => define YoY as 0.0 to avoid division by zero
+            row.yoy_change = 0.0;
+        } else {
+            row.yoy_change = ((row.avg_savings - baseline) / baseline) * 100.0;
+        }
+    }
+
+    // sort ascending by year, and within year descending by avg_savings
+    rows.sort_by(|a, b| {
+        a.funding_year.cmp(&b.funding_year)
+            .then_with(|| b.avg_savings.partial_cmp(&a.avg_savings).unwrap_or(Ordering::Equal))
+    });
+
+    // write CSV
+    let mut wtr = Writer::from_path(output_path)?;
+    wtr.write_record(&[
+        "FundingYear",
+        "TypeOfWork",
+        "TotalProjects",
+        "AvgSavings",
+        "OverrunRate",
+        "YoYChange",
+    ])?;
+
+    for r in &rows {
+        wtr.write_record(&[
+            &r.funding_year.to_string(),
+            &r.type_of_work,
+            &r.total_projects.to_string(),
+            &format!("{:.2}", r.avg_savings).separate_with_commas(),
+            &format!("{:.2}", r.overrun_rate),
+            &format!("{:.2}", r.yoy_change),
+        ])?;
+    }
+    wtr.flush()?;
+
+    // print preview table
+    let preview_count = rows.len().min(10);
+    let preview = &rows[..preview_count];
+    let table = Table::new(preview).to_string();
+    println!("\nReport 3: Annual Project Type Cost Overrun Trends");
+    println!("\nAnnual Project Type Cost Overrun Trends");
+    println!("Grouped by FundingYear and TypeOfWork");
+    println!("{table}");
+    println!("(Full table exported to {})", output_path);
+
+    Ok(())
+}
+
+/// Generate summary.json and print a preview to CLI.
+///
+/// - `projects` - slice of Project
+/// - `output_path` - path to write JSON (e.g. "summary.json")
+pub fn generate_summary(projects: &[Project]) -> Result<(), Box<dyn Error>> {
+    // total projects
+    let output_path = "summary.json";
+    let total_projects = projects.len();
+
+    // total unique contractors (no splitting) — skip empty / None
+    let mut contractors: HashSet<String> = HashSet::new();
+    for p in projects.iter() {
+        if let Some(c) = &p.contractor {
+            let s = c.trim();
+            if !s.is_empty() {
+                contractors.insert(s.to_string());
+            }
+        }
+    }
+    let total_contractors = contractors.len();
+
+    // total unique provinces (non-empty)
+    let mut provinces: HashSet<String> = HashSet::new();
+    for p in projects.iter() {
+        if let Some(pr) = &p.province {
+            let s = pr.trim();
+            if !s.is_empty() {
+                provinces.insert(s.to_string());
+            }
+        }
+    }
+    let total_provinces = provinces.len();
+
+    // global average delay (only projects that have a delay)
+    let mut delay_sum: f64 = 0.0;
+    let mut delay_count: usize = 0;
+    for p in projects.iter() {
+        if let Some(d) = p.completion_delay_days() {
+            delay_sum += d as f64;
+            delay_count += 1;
+        }
+    }
+    let global_avg_delay = if delay_count == 0 {
+        0.0
+    } else {
+        delay_sum / (delay_count as f64)
+    };
+
+    // total savings (sum of cost_savings(), treat missing as 0)
+    let total_savings: f64 = projects.iter()
+        .map(|p| p.cost_savings().unwrap_or(0.0))
+        .sum();
+
+    // build summary and write JSON
+    let summary = Summary {
+        total_projects,
+        total_contractors,
+        total_provinces,
+        global_avg_delay,
+        total_savings,
+    };
+
+    let json = serde_json::to_string_pretty(&summary)?;
+    fs::write(output_path, &json)?;
+
+    // CLI preview: pretty JSON + small table
+    println!("\nSummary Stats (summary.json)");
+    println!("{}", json);
 
     Ok(())
 }
