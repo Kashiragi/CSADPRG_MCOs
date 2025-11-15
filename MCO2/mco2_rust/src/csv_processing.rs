@@ -177,7 +177,7 @@ fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usiz
 
     // list required fields here
     let required = [
-        "MainIsland", "Region", "Province", "LegislativeDistrict", "Municipality",
+        "MainIsland", "Region", "Province", "LegislativeDistrict",
         "DistrictEngineeringOffice", "ProjectId", "ProjectName", "TypeOfWork", "FundingYear",
         "ContractId", "ApprovedBudgetForContract", "ContractCost", "ActualCompletionDate",
         "Contractor", "ContractorCount", "StartDate", "ProjectLatitude", "ProjectLongitude",
