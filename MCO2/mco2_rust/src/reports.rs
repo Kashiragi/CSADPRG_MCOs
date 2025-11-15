@@ -1,3 +1,15 @@
+//! Reports module — CSV report generators and summary exporter.
+//!
+//! This module provides functions to generate three CSV reports and a JSON
+//! summary from a slice of `Project` records. Each report writes a CSV file
+//! and prints a small preview to the CLI.
+//!
+//! The functions in this file:
+//! - `generate_report_1` — Regional Flood Mitigation Efficiency Summary
+//! - `generate_report_2` — Top Contractors Performance Ranking
+//! - `generate_report_3` — Annual Project Type Cost Overrun Trends
+//! - `generate_summary`  — Aggregated summary JSON + CLI preview
+
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::cmp::Ordering;
@@ -10,9 +22,24 @@ use crate::models::{Project, EfficiencyRow, ContractorRow, AnnualProjectRow, Sum
 
 /// Generates "Regional Flood Mitigation Efficiency Summary" CSV.
 ///
+/// Groups projects by `(Region, MainIsland)` and computes, per group:
+/// - total approved budget (`TotalBudget`)
+/// - median cost savings (`MedianSavings`)
+/// - average completion delay in days (`AvgDelay`)
+/// - percent of projects with delay > 30 days (`HighDelayPct`)
+/// - an `EfficiencyScore` computed as `median_savings / avg_delay` (raw),
+///   then normalized to 0..100 via min-max scaling across groups.
+///
+/// The report is exported as `report1_regional_summary.csv` and a top-10 preview
+/// is printed to the CLI.
+///
 /// # Arguments
 ///
-/// * `projects` - Vector of `Project`
+/// * `projects` - slice of `Project` records to aggregate.
+///
+/// # Returns
+///
+/// `Ok(())` on success, or an error if CSV writing fails.
 pub fn generate_report_1(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     // group projects by (region, main_island)
     let output_path = "report1_regional_summary.csv";
@@ -68,7 +95,7 @@ pub fn generate_report_1(projects: &[Project]) -> Result<(), Box<dyn Error>> {
         };
 
         // raw score: median_savings / avg_delay_days
-        // treat avg_delay_days == 0 as raw = 0.0 (no delay → neutral)
+        // treat avg_delay_days == 0 as raw = 0.0 (no delay -> neutral)
         let efficiency_score = if avg_delay_days == 0.0 {
             0.0
         } else {
@@ -113,7 +140,7 @@ pub fn generate_report_1(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     // sort descending by efficiency_score
     report_rows.sort_by(|a, b| b.efficiency_score.partial_cmp(&a.efficiency_score).unwrap_or(Ordering::Equal));
 
-    // --- CLI table (preview top 10 rows)
+    // print preview table
     let preview_count = report_rows.len().min(10);
     let preview = &report_rows[..preview_count];
     let table = Table::new(preview).with(Style::ascii()).to_string();
@@ -153,8 +180,23 @@ pub fn generate_report_1(projects: &[Project]) -> Result<(), Box<dyn Error>> {
 
 /// Generate Report 2: Top Contractors Performance Ranking.
 ///
-/// - `projects`: slice of Project
-/// - `output_path`: path to write CSV
+/// Aggregates by the raw `Contractor` string. For each contractor:
+/// - counts projects,
+/// - sums total contract cost and total cost savings,
+/// - computes average completion delay across projects that have delays,
+/// - computes a `ReliabilityIndex = (1 - avg_delay/90) * (total_savings/total_cost) * 100`,
+///   capped at 100. Contractors with `ReliabilityIndex < 50` are flagged "High Risk".
+///
+/// The report includes only contractors with >= 5 projects and writes
+/// `report2_contractor_ranking.csv`. A preview (top 10 by total cost) is printed.
+///
+/// # Arguments
+///
+/// * `projects` - slice of `Project` records to aggregate.
+///
+/// # Returns
+///
+/// `Ok(())` on success or an error if writing the CSV fails.
 pub fn generate_report_2(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     let output_path = "report2_contractor_ranking.csv";
     // per-contractor accumulators
@@ -274,8 +316,21 @@ pub fn generate_report_2(projects: &[Project]) -> Result<(), Box<dyn Error>> {
 
 /// Generate Report 3: Annual Project Type Cost Overrun Trends.
 ///
-/// Columns order:
-/// Funding Year, Type Of Work, Total Projects, AVG savings, Overrun rate, YoY Change
+/// Groups projects by `(FundingYear, TypeOfWork)` and computes per group:
+/// - `TotalProjects`
+/// - `AVG savings` (average cost savings; negative means overrun)
+/// - `Overrun rate` (percent of those with negative savings among projects reporting savings)
+/// - `YoY Change` — percent change in `avg_savings` relative to 2021 baseline for the same `TypeOfWork`.
+///
+/// Writes `report3_annual_trends.csv` and prints a small preview table.
+///
+/// # Arguments
+///
+/// * `projects` - slice of `Project` records to aggregate.
+///
+/// # Returns
+///
+/// `Ok(())` on success or an error if CSV write fails.
 pub fn generate_report_3(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     let output_path = "report3_annual_trends.csv";
     // group by (funding_year, type_of_work)
@@ -390,14 +445,28 @@ pub fn generate_report_3(projects: &[Project]) -> Result<(), Box<dyn Error>> {
 
 /// Generate summary.json and print a preview to CLI.
 ///
-/// - `projects` - slice of Project
-/// - `output_path` - path to write JSON (e.g. "summary.json")
+/// Aggregates high-level statistics across all projects:
+/// - `total_projects`
+/// - `total_contractors` (unique raw `Contractor` strings, no splitting)
+/// - `total_provinces` (unique non-empty `Province` values)
+/// - `global_avg_delay` (average over projects that report delays)
+/// - `total_savings` (sum of cost_savings, treating missing as 0)
+///
+/// The summary is written to `summary.json` in pretty JSON form and printed.
+///
+/// # Arguments
+///
+/// * `projects` - slice of `Project` records to aggregate.
+///
+/// # Returns
+///
+/// `Ok(())` on success, or an error if writing the JSON fails.
 pub fn generate_summary(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     // total projects
     let output_path = "summary.json";
     let total_projects = projects.len();
 
-    // total unique contractors (no splitting) — skip empty / None
+    // total unique contractors (no splitting) - skip empty / None
     let mut contractors: HashSet<String> = HashSet::new();
     for p in projects.iter() {
         if let Some(c) = &p.contractor {
@@ -453,7 +522,7 @@ pub fn generate_summary(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     let json = serde_json::to_string_pretty(&summary)?;
     fs::write(output_path, &json)?;
 
-    // CLI preview: pretty JSON + small table
+    // CLI preview
     println!("\nSummary Stats (summary.json)");
     println!("{}", json);
 
