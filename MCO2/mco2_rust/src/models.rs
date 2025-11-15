@@ -1,6 +1,7 @@
 use chrono::NaiveDate;
 use thousands::Separable;
 use tabled::Tabled;
+use serde::Serialize;
 
 /// format helpers — signatures must be `fn(&T) -> String`
 fn fmt_currency(v: &f64) -> String {
@@ -9,6 +10,17 @@ fn fmt_currency(v: &f64) -> String {
 
 fn fmt_flt(v: &f64) -> String {
     format!("{:.2}", v)
+}
+
+fn fmt_int(v: &usize) -> String {
+    format!("{}", v)
+}
+
+fn fmt_risk(v: &f64) -> String {
+    let risk = if *v < 50.0 {
+        "High Risk".to_string()
+    } else { "Low Risk".to_string() };
+    risk
 }
 
 #[derive(Debug, Tabled, Clone)]
@@ -35,16 +47,6 @@ pub struct EfficiencyRow {
     pub(crate) efficiency_score: f64,
 }
 
-fn fmt_int(v: &usize) -> String {
-    format!("{}", v)
-}
-
-fn fmt_risk(v: &f64) -> String {
-    let risk = if *v < 50.0 {
-        "High Risk".to_string()
-    } else { "Low Risk".to_string() };
-    risk
-}
 
 #[derive(Debug, Tabled, Clone)]
 pub struct ContractorRow {
@@ -71,6 +73,36 @@ pub struct ContractorRow {
 
     #[tabled(display = "fmt_risk")]
     pub(crate) risk_flag: f64, // duplicate of reliability in pct for quick inspection
+}
+
+#[derive(Debug, Tabled, Clone)]
+pub struct AnnualProjectRow {
+    #[tabled(display = "fmt_int")]
+    pub(crate) funding_year: usize,
+
+    #[tabled(display = "String::from")]
+    pub(crate) type_of_work: String,
+
+    #[tabled(display = "fmt_int")]
+    pub(crate) total_projects: usize,
+
+    #[tabled(display = "fmt_currency")]
+    pub(crate) avg_savings: f64,
+
+    #[tabled(display = "fmt_flt")]
+    pub(crate) overrun_rate: f64,
+
+    #[tabled(display = "fmt_flt")]
+    pub(crate) yoy_change: f64,
+}
+
+#[derive(Serialize)]
+pub struct Summary {
+    pub(crate) total_projects: usize,
+    pub(crate) total_contractors: usize,
+    pub(crate) total_provinces: usize,
+    pub(crate) global_avg_delay: f64,
+    pub(crate) total_savings: f64,
 }
 
 #[allow(dead_code)]
