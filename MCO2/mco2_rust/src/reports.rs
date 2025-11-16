@@ -80,7 +80,7 @@ pub fn generate_report_1(projects: &[Project]) -> Result<(), Box<dyn Error>> {
         let delays: Vec<f64> = group.iter()
             .filter_map(|p| p.completion_delay_days().map(|d| d as f64))
             .collect();
-        let avg_delay_days = if delays.is_empty() {
+        let avg_delay = if delays.is_empty() {
             0.0
         } else {
             delays.iter().sum::<f64>() / (delays.len() as f64)
@@ -90,16 +90,16 @@ pub fn generate_report_1(projects: &[Project]) -> Result<(), Box<dyn Error>> {
         let delayed_count = group.iter()
             .filter(|p| p.completion_delay_days().map(|d| d > 30).unwrap_or(false))
             .count();
-        let pct_delayed_over_30 = if group.is_empty() { 0.0 } else {
+        let high_delay_pct = if group.is_empty() { 0.0 } else {
             (delayed_count as f64 / group.len() as f64) * 100.0
         };
 
-        // raw score: median_savings / avg_delay_days
-        // treat avg_delay_days == 0 as raw = 0.0 (no delay -> neutral)
-        let efficiency_score = if avg_delay_days == 0.0 {
+        // raw score: median_savings / avg_delay
+        // treat avg_delay == 0 as raw = 0.0 (no delay -> neutral)
+        let efficiency_score = if avg_delay == 0.0 {
             0.0
         } else {
-            median_savings / avg_delay_days
+            median_savings / avg_delay
         };
 
         report_rows.push(EfficiencyRow {
@@ -107,8 +107,8 @@ pub fn generate_report_1(projects: &[Project]) -> Result<(), Box<dyn Error>> {
             main_island,
             total_budget,
             median_savings,
-            avg_delay_days,
-            pct_delayed_over_30,
+            avg_delay,
+            high_delay_pct,
             efficiency_score,
         });
     }
@@ -167,8 +167,8 @@ pub fn generate_report_1(projects: &[Project]) -> Result<(), Box<dyn Error>> {
             row.main_island,
             format!("{:.2}", row.total_budget).separate_with_commas(),
             format!("{:.2}", row.median_savings).separate_with_commas(),
-            format!("{:.2}", row.avg_delay_days),
-            format!("{:.2}", row.pct_delayed_over_30),
+            format!("{:.2}", row.avg_delay),
+            format!("{:.2}", row.high_delay_pct),
             format!("{:.2}", row.efficiency_score),
         ])?;
     }
@@ -255,7 +255,7 @@ pub fn generate_report_2(projects: &[Project]) -> Result<(), Box<dyn Error>> {
                 contractor: name,
                 total_contract_cost: a.total_cost,
                 projects: a.proj_count,
-                avg_delay_days: avg_delay,
+                avg_delay,
                 total_cost_savings: a.total_savings,
                 reliability_index: reliability,
                 risk_flag: reliability,
@@ -293,7 +293,7 @@ pub fn generate_report_2(projects: &[Project]) -> Result<(), Box<dyn Error>> {
             &r.contractor,
             &format!("{:.2}", r.total_contract_cost).separate_with_commas(),
             &r.projects.to_string(),
-            &format!("{:.2}", r.avg_delay_days),
+            &format!("{:.2}", r.avg_delay),
             &format!("{:.2}", r.total_cost_savings).separate_with_commas(),
             &format!("{:.2}", r.reliability_index),
             risk_flag,
