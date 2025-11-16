@@ -84,7 +84,7 @@ function cleanRow(row) {
     region: row.Region || '',
     province: row.Province || '',
     legislativeDistrict: row.LegislativeDistrict || '',
-    municipality: row.Municipality || '',
+    municipality: row.Municipality || 'N/A',  // Impute missing Municipality as 'N/A'
     districtEngineeringOffice: row.DistrictEngineeringOffice || '',
     projectId: row.ProjectId || '',
     projectName: row.ProjectName || '',

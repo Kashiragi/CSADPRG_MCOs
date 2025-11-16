@@ -57,13 +57,13 @@ function validateRow(row, rowIndex) {
   const issues = [];
   const rowNum = rowIndex + 1;
 
-  // Check ALL required text fields (no empty strings allowed)
+  // Check required text fields (Municipality is optional and will be imputed)
   const requiredTextFields = [
     'MainIsland',
     'Region',
     'Province',
     'LegislativeDistrict',
-    'Municipality',
+    // 'Municipality', // Optional - will be imputed as 'N/A' if missing
     'DistrictEngineeringOffice',
     'ProjectId',
     'ProjectName',
