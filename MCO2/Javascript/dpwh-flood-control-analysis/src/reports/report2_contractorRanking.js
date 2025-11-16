@@ -11,7 +11,7 @@ const { logInfo, logSection } = require('../services/loggingService');
  * @param {number} avgDelay - Average completion delay in days
  * @param {number} totalSavings - Total cost savings
  * @param {number} totalCost - Total contract cost
- * @returns {number} - Reliability index (0-100)
+ * @returns {number} - Reliability index (capped at 100, can be negative)
  */
 function calculateReliabilityIndex(avgDelay, totalSavings, totalCost) {
   if (totalCost === 0) return 0;
@@ -20,8 +20,8 @@ function calculateReliabilityIndex(avgDelay, totalSavings, totalCost) {
   const savingsRatio = totalSavings / totalCost;
   const index = delayFactor * savingsRatio * 100;
   
-  // Cap at 100
-  return Math.min(Math.max(index, 0), 100);
+  // Cap at 100 (no lower bound - can be negative)
+  return Math.min(index, 100);
 }
 
 /**
