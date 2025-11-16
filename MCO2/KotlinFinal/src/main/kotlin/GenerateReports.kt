@@ -206,7 +206,7 @@ fun GenerateReport3(data: DataFrame<*>): DataFrame<*>{
             (overrunCount / totalCount) * 100.0  into "OverrunRate"
         }
     val previous_year = groupedByYear
-        .select("TypeOfWork", "AvgSavings")
+        .select("TypeOfWork", "AvgSavings", "FundingYear")
         .rename("AvgSavings").into("PrevAvgSavings")
         .update("FundingYear").with { (this["FundingYear"] as Int) +1 }
     // current-previous/previous/100
@@ -284,8 +284,8 @@ fun generateSummary(r: DataFrame<*>, r1: DataFrame<*>, r2: DataFrame<*>, r3: Dat
         put("total_savings", "%,.2f".format(totalSavings))
     }
 
-    val jsonString = Json.encodeToString(JsonObject.serializer(), summaryJson)
-
+    val jsonString = Json{prettyPrint=true}.encodeToString(JsonObject.serializer(), summaryJson)
+    println(jsonString);
     File(filenameWExtension).writeText(jsonString)
 //    print(jsonString)
 }
