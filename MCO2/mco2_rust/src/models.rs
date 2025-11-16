@@ -1,101 +1,174 @@
+//! Models & report row representations used throughout the system.
+//!
+//! This module defines:
+//! - `Project`: raw CSV-mapped project data.
+//! - `EfficiencyRow`: aggregated region/main-island efficiency metrics.
+//! - `ContractorRow`: contractor performance ranking rows.
+//! - `AnnualProjectRow`: yearly cost-overrun trend rows.
+//! - `Summary`: global dataset summary for `summary.json`.
+//!
+//! Formatting helpers are also included so [`tabled`] can render numbers
+//! with comma separators, currency format, percent flags, etc.
+
 use chrono::NaiveDate;
 use thousands::Separable;
 use tabled::Tabled;
 use serde::Serialize;
 
-/// format helpers — signatures must be `fn(&T) -> String`
+/// Format a floating-point currency value to 2 decimals
+/// and insert comma delimiters (e.g. `1200000.5 → "1,200,000.50"`).
 fn fmt_currency(v: &f64) -> String {
     format!("{:.2}", v).separate_with_commas()
 }
 
+/// Format a floating-point number with 2 decimals.
 fn fmt_flt(v: &f64) -> String {
     format!("{:.2}", v)
 }
 
+/// Format an integer without commas.
 fn fmt_int(v: &usize) -> String {
     format!("{}", v)
 }
 
+/// Converts a numeric reliability score into `"High Risk"`
+/// when `< 50`, otherwise `"Low Risk"`.
+///
+/// Used only for table display.
+/// The underlying numeric value is still stored separately.
 fn fmt_risk(v: &f64) -> String {
-    let risk = if *v < 50.0 {
-        "High Risk".to_string()
-    } else { "Low Risk".to_string() };
-    risk
+    if *v < 50.0 {
+        "High Risk".into()
+    } else {
+        "Low Risk".into()
+    }
 }
 
+/// Row representation for **Regional Flood Mitigation Efficiency Summary**
+/// (Report 1).
+///
+/// Each row is grouped by `(Region, MainIsland)` and contains:
+/// - total budget
+/// - median cost savings
+/// - average completion delay
+/// - % delayed > 30 days
+/// - computed efficiency score
 #[derive(Debug, Tabled, Clone)]
 pub struct EfficiencyRow {
+    /// Project region (group key)
     #[tabled(display = "String::from")]
     pub(crate) region: String,
 
+    /// Main island (group key)
     #[tabled(display = "String::from")]
     pub(crate) main_island: String,
 
+    /// Total approved budget across all grouped projects
     #[tabled(display = "fmt_currency")]
     pub(crate) total_budget: f64,
 
+    /// Median `cost_savings` for the region
     #[tabled(display = "fmt_currency")]
     pub(crate) median_savings: f64,
 
+    /// Average completion delay (days, may be negative)
     #[tabled(display = "fmt_flt")]
-    pub(crate) avg_delay_days: f64,
+    pub(crate) avg_delay: f64,
 
+    /// % of projects where delay > 30 days
     #[tabled(display = "fmt_flt")]
-    pub(crate) pct_delayed_over_30: f64,
+    pub(crate) high_delay_pct: f64,
 
+    /// Normalized efficiency score (0–100)
     #[tabled(display = "fmt_flt")]
     pub(crate) efficiency_score: f64,
 }
 
-
+/// Row representation for **Top Contractors Performance Ranking** (Report 2).
+///
+/// Sorted descending by total contract cost.
+/// Only contractors with ≥ 5 projects are included.
+///
+/// Fields:
+/// - `rank` – assigned index (1-based)
+/// - totals and averages derived from grouped `Project` rows
+/// - `reliability_index` capped at 100
+/// - `risk_flag` is `"High Risk"` if score < 50
 #[derive(Debug, Tabled, Clone)]
 pub struct ContractorRow {
+    /// Ranking index (1 = best)
     #[tabled(display = "fmt_int")]
     pub(crate) rank: usize,
 
+    /// Contractor name (possibly merged from multi-contractor rows)
     #[tabled(display = "String::from")]
     pub(crate) contractor: String,
 
+    /// Sum of all cost savings for this contractor
     #[tabled(display = "fmt_currency")]
     pub(crate) total_cost_savings: f64,
 
+    /// Number of projects attributed to the contractor
     #[tabled(display = "fmt_int")]
     pub(crate) projects: usize,
 
+    /// Mean completion delay (days)
     #[tabled(display = "fmt_flt")]
-    pub(crate) avg_delay_days: f64,
+    pub(crate) avg_delay: f64,
 
+    /// Total contract cost across projects
     #[tabled(display = "fmt_currency")]
     pub(crate) total_contract_cost: f64,
 
+    /// Reliability score (0–100 capped)
     #[tabled(display = "fmt_flt")]
     pub(crate) reliability_index: f64,
 
+    /// `"High Risk"` if reliability_index < 50, `"Low Risk"` otherwise
     #[tabled(display = "fmt_risk")]
-    pub(crate) risk_flag: f64, // duplicate of reliability in pct for quick inspection
+    pub(crate) risk_flag: f64,
 }
 
+/// Row representation for **Annual Project Type Cost Overrun Trends** (Report 3).
+///
+/// Grouped by `(FundingYear, TypeOfWork)`.
+///
+/// Includes:
+/// - total projects
+/// - average cost savings (negative = overrun)
+/// - overrun rate (`% saving < 0`)
+/// - YoY % change from 2021 baseline
 #[derive(Debug, Tabled, Clone)]
 pub struct AnnualProjectRow {
+    /// Calendar funding year (usize for easy sorting)
     #[tabled(display = "fmt_int")]
     pub(crate) funding_year: usize,
 
+    /// Type of civil work (e.g., Drainage, Dike, Bridge)
     #[tabled(display = "String::from")]
     pub(crate) type_of_work: String,
 
+    /// Total projects for this year & type
     #[tabled(display = "fmt_int")]
     pub(crate) total_projects: usize,
 
+    /// Mean cost savings (maybe negative)
     #[tabled(display = "fmt_currency")]
     pub(crate) avg_savings: f64,
 
+    /// % of projects where cost savings < 0
     #[tabled(display = "fmt_flt")]
     pub(crate) overrun_rate: f64,
 
+    /// Year-over-year % change in avg savings, baseline = 2021
     #[tabled(display = "fmt_flt")]
     pub(crate) yoy_change: f64,
 }
 
+/// JSON export structure containing **global dataset statistics**.
+///
+/// Values stored as strings so they can be printed directly
+/// without further formatting.
 #[derive(Serialize)]
 pub struct Summary {
     pub(crate) total_projects: String,
@@ -105,6 +178,13 @@ pub struct Summary {
     pub(crate) total_savings: String,
 }
 
+/// Raw CSV-mapped project struct.
+///
+/// All fields are optional because many rows contain blanks.
+///
+/// Provides helper methods:
+/// - [`Project::cost_savings`] → `budget - cost`
+/// - [`Project::completion_delay_days`] → `(end - start).days()`
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct Project {
