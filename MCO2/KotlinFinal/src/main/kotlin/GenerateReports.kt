@@ -205,21 +205,26 @@ fun GenerateReport3(data: DataFrame<*>): DataFrame<*>{
             val totalCount = count()
             (overrunCount / totalCount) * 100.0  into "OverrunRate"
         }
-
+    val previous_year = groupedByYear
+        .select("TypeOfWork", "AvgSavings")
+        .rename("AvgSavings").into("PrevAvgSavings")
+        .update("FundingYear").with { (this["FundingYear"] as Int) +1 }
     // current-previous/previous/100
 
-    val baselineDf = groupedByYear
-        .filter{
-            (it["FundingYear"] as Int)  == 2021
-        }
-        .select ("TypeOfWork","AvgSavings")
-        .rename("AvgSavings").into("BaseLineAvgSavings")
+//    val baselineDf = groupedByYear
+//        .filter{
+//            (it["FundingYear"] as Int)  == 2021
+//        }
+//        .select ("TypeOfWork","AvgSavings")
+//        .rename("AvgSavings").into("BaseLineAvgSavings")
 
     val df_3WithYOY = groupedByYear
-        .leftJoin(baselineDf) { column<String>("TypeOfWork") }
+        .leftJoin(previous_year) {
+            column<String>("TypeOfWork") and column<Int>("FundingYear")
+        }
         .add ("YoYChange") {
             val curr = it["AvgSavings"] as? Double
-            val baseline = it["BaseLineAvgSavings"] as? Double
+            val baseline = it["PrevAvgSavings"] as? Double
 
             if(curr!=null && baseline!=null && baseline!=0.0)
                 (curr - baseline)/baseline * 100.00
