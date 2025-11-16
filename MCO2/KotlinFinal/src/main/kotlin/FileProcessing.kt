@@ -1,4 +1,3 @@
-package org.mco2
 
 import java.io.File
 import org.jetbrains.kotlinx.dataframe.*
@@ -56,7 +55,8 @@ fun CleanDataFrame(df: DataFrame<*>): DataFrame<*>{
 
     // Remove all rows with empty values in at least 1 column
     // this makes life simpler oop-
-    val cleanDf = df.dropNulls()
+    val imputedDf = df.fillNulls("Municipality").with({ "None" });
+    val cleanDf = imputedDf.dropNulls()
 
     val validYearsDf = cleanDf
         .filter { row ->
@@ -91,8 +91,21 @@ fun OutputCSV(df: DataFrame<*>, filenameWExtension: String){
     try {
         val outCsv = File(filenameWExtension)
         df.writeCsv(outCsv)
-        println("Full table exported to ${filenameWExtension}")
+        println("\n(Full table exported to ${filenameWExtension})");
     } catch (e: Exception){
         println("Unable to export full table to ${filenameWExtension}")
+    }
+}
+
+fun PrintDataFrame(df: DataFrame<*>){
+    val colSeparator = " | "
+    val header = df.columnNames().joinToString(colSeparator)
+    println("-".repeat(header.length + (df.columnNames().size - 1) * colSeparator.length))
+
+    df.rows().forEach{ row ->
+        val rowString = df.columnNames().joinToString("|") { colName ->
+            row[colName].toString()
+        }
+
     }
 }
