@@ -8,12 +8,12 @@ const { logInfo, logSection } = require('../services/loggingService');
 /**
  * Calculates year-over-year change percentage
  * @param {number} currentValue - Current year value
- * @param {number} baselineValue - Baseline (2021) value
+ * @param {number} previousYearValue - Previous year value
  * @returns {number|null} - YoY change percentage
  */
-function calculateYoYChange(currentValue, baselineValue) {
-  if (!baselineValue || baselineValue === 0) return null;
-  return ((currentValue - baselineValue) / baselineValue) * 100;
+function calculateYoYChange(currentValue, previousYearValue) {
+  if (!previousYearValue || previousYearValue === 0) return null;
+  return ((currentValue - previousYearValue) / previousYearValue) * 100;
 }
 
 /**
@@ -34,7 +34,7 @@ function generateCostOverrunTrendsReport(data, options = {}) {
   const grouped = _.groupBy(data, row => `${row.fundingYear}|${row.typeOfWork}`);
   
   const trendsData = [];
-  const baselineByType = {}; // Store 2021 baseline for each type
+  const avgByYearAndType = {}; // Store average savings per year per type
   
   Object.entries(grouped).forEach(([key, projects]) => {
     const [fundingYear, typeOfWork] = key.split('|');
@@ -59,30 +59,44 @@ function generateCostOverrunTrendsReport(data, options = {}) {
       ? (projectsWithOverrun / validSavings.length) * 100 
       : 0;
     
-    // Store 2021 as baseline
-    if (year === 2021) {
-      baselineByType[typeOfWork] = avgCostSavings;
+    // Store average savings by year and type for YoY calculation
+    if (!avgByYearAndType[year]) {
+      avgByYearAndType[year] = {};
     }
+    avgByYearAndType[year][typeOfWork] = avgCostSavings;
     
     trendsData.push({
       fundingYear: year,
       typeOfWork,
       totalProjects,
       avgCostSavings,
-      overrunRate,
-      baselineValue: baselineByType[typeOfWork] || null
+      overrunRate
     });
   });
   
-  // Calculate YoY change for each entry
+  // Calculate YoY change based on previous year
   trendsData.forEach(entry => {
-    const baseline = baselineByType[entry.typeOfWork];
-    if (entry.fundingYear === 2021) {
-      entry.yoyChange = 0; // Baseline year
-    } else if (baseline !== undefined && baseline !== null) {
-      entry.yoyChange = calculateYoYChange(entry.avgCostSavings, baseline);
+    const currentYear = entry.fundingYear;
+    const previousYear = currentYear - 1;
+    
+    // Find the minimum year in the dataset
+    const minYear = Math.min(...trendsData.map(e => e.fundingYear));
+    
+    if (currentYear === minYear) {
+      // First year in dataset (baseline) - no YoY change
+      entry.yoyChange = 0;
     } else {
-      entry.yoyChange = null;
+      // Check if previous year data exists for this type of work
+      const previousYearValue = avgByYearAndType[previousYear] 
+        ? avgByYearAndType[previousYear][entry.typeOfWork] 
+        : null;
+      
+      if (previousYearValue !== null && previousYearValue !== undefined) {
+        entry.yoyChange = calculateYoYChange(entry.avgCostSavings, previousYearValue);
+      } else {
+        // Previous year data not available for this type
+        entry.yoyChange = null;
+      }
     }
   });
   
