@@ -180,8 +180,7 @@ fn parse_record_to_project(rec: &StringRecord, header_map: &HashMap<String, usiz
         "MainIsland", "Region", "Province", "LegislativeDistrict",
         "DistrictEngineeringOffice", "ProjectId", "ProjectName", "TypeOfWork", "FundingYear",
         "ContractId", "ApprovedBudgetForContract", "ContractCost", "ActualCompletionDate",
-        "Contractor", "ContractorCount", "StartDate", "ProjectLatitude", "ProjectLongitude",
-        "ProvincialCapital", "ProvincialCapitalLatitude", "ProvincialCapitalLongitude",
+        "Contractor", "ContractorCount", "StartDate", "ProvincialCapital"
     ];
 
     // check for an empty field
