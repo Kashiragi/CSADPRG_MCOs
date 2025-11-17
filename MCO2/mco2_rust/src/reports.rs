@@ -320,7 +320,8 @@ pub fn generate_report_2(projects: &[Project]) -> Result<(), Box<dyn Error>> {
 /// - `TotalProjects`
 /// - `AVG savings` (average cost savings; negative means overrun)
 /// - `Overrun rate` (percent of those with negative savings among projects reporting savings)
-/// - `YoY Change` — percent change in `avg_savings` relative to 2021 baseline for the same `TypeOfWork`.
+/// - `YoY Change` — percent change in `avg_savings` relative to the previous year for the same
+///   type of `TypeOfWork` (rows with no previous-year data or a zero baseline get a 0.0).
 ///
 /// Writes `report3_annual_trends.csv` and prints a small preview table.
 ///
@@ -348,8 +349,6 @@ pub fn generate_report_3(projects: &[Project]) -> Result<(), Box<dyn Error>> {
     // compute avg_savings and overruns per group
     // first produce raw rows
     let mut rows: Vec<AnnualProjectRow> = Vec::new();
-    // map for baseline 2021 by type_of_work -> avg_savings
-    let mut baseline_2021: HashMap<String, f64> = HashMap::new();
 
     for ((year, typ), group) in groups.iter() {
         let total_projects = group.len();
@@ -382,22 +381,32 @@ pub fn generate_report_3(projects: &[Project]) -> Result<(), Box<dyn Error>> {
             overrun_rate,
             yoy_change: 0.0, // placeholder
         });
-
-        // store baseline if year == 2021
-        if *year == 2021 {
-            baseline_2021.insert(typ.clone(), avg_savings);
-        }
     }
 
-    // compute YoY change relative to 2021 baseline per type_of_work
+    // build a map from (year, type) -> avg_savings so we can look up previous year
+    let mut avg_map: HashMap<(usize, String), f64> = HashMap::new();
+    for r in rows.iter() {
+        avg_map.insert((r.funding_year, r.type_of_work.clone()), r.avg_savings);
+    }
+
+    // compute YoY change relative to the previous year for the same type_of_work
     for row in rows.iter_mut() {
-        let typ = &row.type_of_work;
-        let baseline = baseline_2021.get(typ).copied().unwrap_or(0.0);
-        if baseline.abs() < f64::EPSILON {
-            // baseline zero or missing => define YoY as 0.0 to avoid division by zero
+        if row.funding_year == 0 {
             row.yoy_change = 0.0;
+            continue;
+        }
+        let prev_year = row.funding_year - 1;
+        let key = (prev_year, row.type_of_work.clone());
+        if let Some(&baseline) = avg_map.get(&key) {
+            if baseline.abs() < f64::EPSILON {
+                // baseline zero -> avoid division by zero, set YoY = 0.0
+                row.yoy_change = 0.0;
+            } else {
+                row.yoy_change = ((row.avg_savings - baseline) / baseline) * 100.0;
+            }
         } else {
-            row.yoy_change = ((row.avg_savings - baseline) / baseline) * 100.0;
+            // no previous-year data — set YoY = 0.0 (this covers 2021 if previous year missing)
+            row.yoy_change = 0.0;
         }
     }
 
@@ -424,8 +433,8 @@ pub fn generate_report_3(projects: &[Project]) -> Result<(), Box<dyn Error>> {
             &r.type_of_work,
             &r.total_projects.to_string(),
             &format!("{:.2}", r.avg_savings).separate_with_commas(),
-            &format!("{:.2}", r.overrun_rate),
-            &format!("{:.2}", r.yoy_change),
+            &format!("{:.2}", r.overrun_rate).separate_with_commas(),
+            &format!("{:.2}", r.yoy_change).separate_with_commas(),
         ])?;
     }
     wtr.flush()?;
