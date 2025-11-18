@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "generatedAt": "2025-11-18T18:10:35PST",
+    "dataYears": [
+      2021,
+      2022,
+      2023
+    ],
+    "reportVersion": "1.0.0"
+  },
+  "overview": {
+    "totalProjects": 7265,
+    "totalContractors": 2013,
+    "totalProvinces": 84,
+    "totalRegions": 16
+  },
+  "financial": {
+    "totalApprovedBudget": 398955561613.45,
+    "totalContractCost": 391571913933.97,
+    "totalSavings": 7383647679.48,
+    "avgSavingsPerProject": 1016331.41,
+    "budgetUtilizationRate": 98.15,
+    "projectsOverBudget": 587,
+    "projectsUnderBudget": 6678,
+    "overBudgetRate": 8.08
+  },
+  "performance": {
+    "globalAvgDelayDays": 261.3,
+    "globalAvgDelayMonths": 8.58,
+    "projectsWithLongDelay": 7253,
+    "longDelayRate": 99.83
+  },
+  "distribution": {
+    "byYear": {
+      "2021": 266,
+      "2022": 3568,
+      "2023": 3431
+    },
+    "byIsland": {
+      "Luzon": 3792,
+      "Mindanao": 1147,
+      "Unknown": 1063,
+      "Visayas": 1263
+    },
+    "byTypeOfWork": {
+      "Construction of Flood Mitigation Structure": 4650,
+      "Construction of Revetment": 555,
+      "Construction of Slope Protection Structure": 531,
+      "Construction of Drainage Structure": 504,
+      "Rehabilitation / Major Repair of Flood Control Structure": 497
+    }
+  },
+  "reports": {
+    "report1": {
+      "totalRegions": 16,
+      "highestEfficiencyRegion": "National Capital Region",
+      "highestEfficiencyScore": 100
+    },
+    "report2": {
+      "totalContractors": 15,
+      "topContractor": "LEGACY CONSTRUCTION CORPORATION (FORMERLY: LEGACY CONSTRUCTION)",
+      "highRiskCount": 15
+    },
+    "report3": {
+      "totalEntries": 38,
+      "yearsCount": 3,
+      "typesCount": 17
+    }
+  }
+}
