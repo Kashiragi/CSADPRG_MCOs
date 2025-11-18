@@ -94,45 +94,13 @@ function generateSummaryReport(data, reports = {}, options = {}) {
       return acc;
     }, {});
   
-  // Compile summary object
+  // Compile simplified summary object (computed dynamically)
   const summary = {
-    metadata: {
-      generatedAt: new Date().toISOString(),
-      dataYears: [2021, 2022, 2023],
-      reportVersion: '1.0.0'
-    },
-    overview: {
-      totalProjects,
-      totalContractors: uniqueContractors,
-      totalProvinces: uniqueProvinces,
-      totalRegions: uniqueRegions
-    },
-    financial: {
-      totalApprovedBudget,
-      totalContractCost,
-      totalSavings,
-      avgSavingsPerProject: avgSavings,
-      budgetUtilizationRate,
-      projectsOverBudget,
-      projectsUnderBudget,
-      overBudgetRate: (projectsOverBudget / totalProjects) * 100
-    },
-    performance: {
-      globalAvgDelayDays: globalAvgDelay,
-      globalAvgDelayMonths: globalAvgDelay / 30.44,
-      projectsWithLongDelay,
-      longDelayRate: (projectsWithLongDelay / totalProjects) * 100
-    },
-    distribution: {
-      byYear: yearDistribution,
-      byIsland: islandDistribution,
-      byTypeOfWork: typeDistribution
-    },
-    reports: {
-      report1: reports.report1 ? reports.report1.summary : null,
-      report2: reports.report2 ? reports.report2.summary : null,
-      report3: reports.report3 ? reports.report3.summary : null
-    }
+    total_projects: totalProjects,
+    total_contractors: uniqueContractors,
+    total_provinces: uniqueProvinces,
+    global_avg_delay: globalAvgDelay.toFixed(2),
+    total_savings: totalSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})
   };
   
   // Write to JSON file
@@ -163,6 +131,7 @@ async function testSummaryReport() {
     console.log('\n[TEST] Testing Summary Report...\n');
     
     const { readData } = require('../ingestion/readData');
+    const { validateData } = require('../ingestion/validateData');
     const { cleanData } = require('../ingestion/cleanData');
     const { deriveFields } = require('../ingestion/deriveFields');
     const { generateRegionalEfficiencyReport } = require('./report1_regionalEfficiency');
@@ -170,7 +139,15 @@ async function testSummaryReport() {
     const { generateCostOverrunTrendsReport } = require('./report3_costOverrunTrends');
     
     const raw = await readData();
-    const cleaned = cleanData(raw, { logResults: false });
+    const validationResults = validateData(raw);
+    const validData = validationResults.validData;
+    const cleaned = cleanData(validData, {
+      startYear: 2021,
+      endYear: 2023,
+      dropMissingCoords: true,
+      logResults: false,
+      originalCount: raw.length
+    });
     const processed = deriveFields(cleaned, { logResults: false });
     
     // Generate all reports
@@ -184,11 +161,11 @@ async function testSummaryReport() {
     console.log('\n[SUCCESS] Summary report generated!');
     console.log(`  File: ${result.filePath}`);
     console.log('\n[SUMMARY] Key Statistics:');
-    console.log(`  Total Projects: ${result.data.overview.totalProjects.toLocaleString()}`);
-    console.log(`  Total Contractors: ${result.data.overview.totalContractors.toLocaleString()}`);
-    console.log(`  Total Provinces: ${result.data.overview.totalProvinces.toLocaleString()}`);
-    console.log(`  Global Avg Delay: ${result.data.performance.globalAvgDelayDays.toFixed(2)} days`);
-    console.log(`  Total Savings: PHP ${result.data.financial.totalSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`);
+    console.log(`  Total Projects: ${result.data.total_projects}`);
+    console.log(`  Total Contractors: ${result.data.total_contractors}`);
+    console.log(`  Total Provinces: ${result.data.total_provinces}`);
+    console.log(`  Global Avg Delay: ${result.data.global_avg_delay}`);
+    console.log(`  Total Savings: ${result.data.total_savings}`);
     
     return result;
   } catch (error) {
