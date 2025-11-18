@@ -202,9 +202,9 @@ generate_report3 <- function(data) {
   
   report3 <- report3_summarized %>%
     group_by(type_of_work) %>%
-    arrange(funding_year) %>% 
+    arrange(funding_year) %>%
     mutate(
-      PreviousAvgSavings = lag(AvgCostSavings), 
+      PreviousAvgSavings = lag(AvgCostSavings),
       
       YoYChangePercent = case_when(
         is.na(PreviousAvgSavings) | PreviousAvgSavings == 0 ~ 0,
@@ -230,123 +230,39 @@ generate_report3 <- function(data) {
   return(report3_out)
 }
 
-
-#' Generates a comprehensive summary of key project metrics.
+#' Generates a simplified summary report of key project metrics.
 #'
-#' This function compiles high-level financial, performance, and distribution
-#' statistics into a single list and exports it as a JSON file.
+#' This function calculates the main top-level statistics (counts, total savings, 
+#' and average delay) and packs them into a clean JSON file for easy viewing.
 #'
-#' @param data The clean project data.
-#' @param report1_data Summary data from Report 1.
-#' @param report2_data Summary data from Report 2.
-#' @param report3_data Summary data from Report 3.
-#' @return A list containing all calculated summary statistics.
+#' @param data The main cleaned project data we're analyzing.
+#' @param report1_data, report2_data, report3_data These are included to match 
+#'        the calling signature from the main script, but they aren't actually 
+#'        used in this simplified version.
+#' @return A list containing the core summary statistics, which also gets saved 
+#'         as a JSON file named \code{summary.json}.
 generate_summary_report <- function(data, report1_data, report2_data, report3_data) {
   
-  # --- Project Overview ---
   total_projects <- nrow(data)
   unique_contractors <- n_distinct(data$contractor)
   unique_provinces <- n_distinct(data$province)
-  unique_regions <- n_distinct(data$region)
   
-  # --- Financial Summary ---
-  total_approved_budget <- sum(data$approved_budget_for_contract, na.rm = TRUE)
-  total_contract_cost <- sum(data$contract_cost, na.rm = TRUE)
   total_savings <- sum(data$cost_savings, na.rm = TRUE)
   
-  avg_savings <- mean(data$cost_savings, na.rm = TRUE)
-  
-  budget_utilization_rate <- ifelse(total_approved_budget > 0, 
-                                    (total_contract_cost / total_approved_budget) * 100, 
-                                    0)
-  
-  projects_over_budget <- sum(data$cost_savings < 0, na.rm = TRUE)
-  projects_under_budget <- sum(data$cost_savings >= 0, na.rm = TRUE)
-  
-  over_budget_rate <- ifelse(total_projects > 0, (projects_over_budget / total_projects) * 100, 0)
-  
-  # --- Performance (Delay) Summary ---
   global_avg_delay_days <- mean(data$completion_delay_days, na.rm = TRUE)
-  global_avg_delay_months <- global_avg_delay_days / 30.44
-  projects_with_long_delay <- sum(data$completion_delay_days > 30, na.rm = TRUE)
-  long_delay_rate <- ifelse(total_projects > 0, (projects_with_long_delay / total_projects) * 100, 0)
-  
-  # --- Distribution Counts (converted to named lists for JSON) ---
-  year_counts <- data %>% count(funding_year) %>% mutate(funding_year = as.character(funding_year))
-  year_distribution <- setNames(as.list(year_counts$n), year_counts$funding_year)
-  
-  island_counts <- data %>% count(main_island)
-  island_distribution <- setNames(as.list(island_counts$n), island_counts$main_island)
-  
-  type_counts <- data %>% count(type_of_work, sort = TRUE) %>% slice_head(n = 5)
-  type_distribution <- setNames(as.list(type_counts$n), type_counts$type_of_work)
-  
-  # --- Summaries from Detailed Reports ---
-  report1_summary <- list(
-    totalRegions = nrow(report1_data),
-    highestEfficiencyRegion = report1_data$region[1],
-    highestEfficiencyScore = round(report1_data$EfficiencyScore[1], 2)
+
+  simple_summary_output <- list(
+    total_projects = total_projects,
+    total_contractors = unique_contractors,
+    total_provinces = unique_provinces,
+    global_avg_delay = format(round(global_avg_delay_days, 2), nsmall = 2),
+    total_savings = format(round(total_savings, 2), nsmall = 2, big.mark = ",") 
   )
   
-  report2_summary <- list(
-    totalContractors = nrow(report2_data),
-    topContractor = report2_data$Contractor[1],
-    highRiskCount = sum(report2_data$RiskLevel == 'High Risk', na.rm = TRUE)
-  )
-  
-  report3_summary <- list(
-    totalEntries = nrow(report3_data),
-    yearsCount = n_distinct(report3_data$FundingYear),
-    typesCount = n_distinct(report3_data$TypeOfWork)
-  )
-  
-  
-  # 5. Build the final structured summary list
-  summary_stats <- list(
-    metadata = list(
-      generatedAt = format(Sys.time(), format = "%Y-%m-%dT%H:%M:%S%Z"),
-      dataYears = list(2021, 2022, 2023),
-      reportVersion = '1.0.0'
-    ),
-    overview = list(
-      totalProjects = total_projects,
-      totalContractors = unique_contractors,
-      totalProvinces = unique_provinces,
-      totalRegions = unique_regions
-    ),
-    financial = list(
-      totalApprovedBudget = round(total_approved_budget, 2),
-      totalContractCost = round(total_contract_cost, 2),
-      totalSavings = round(total_savings, 2),
-      avgSavingsPerProject = round(avg_savings, 2),
-      budgetUtilizationRate = round(budget_utilization_rate, 2),
-      projectsOverBudget = projects_over_budget,
-      projectsUnderBudget = projects_under_budget,
-      overBudgetRate = round(over_budget_rate, 2)
-    ),
-    performance = list(
-      globalAvgDelayDays = round(global_avg_delay_days, 2),
-      globalAvgDelayMonths = round(global_avg_delay_months, 2),
-      projectsWithLongDelay = projects_with_long_delay,
-      longDelayRate = round(long_delay_rate, 2)
-    ),
-    distribution = list(
-      byYear = year_distribution,
-      byIsland = island_distribution,
-      byTypeOfWork = type_distribution
-    ),
-    reports = list(
-      report1 = report1_summary,
-      report2 = report2_summary,
-      report3 = report3_summary
-    )
-  )
-  
-  # 6. Save the summary as a readable JSON file
   summary_json_path <- file.path(OUTPUT_DIR, "summary.json")
-  write_json(summary_stats, summary_json_path, pretty = TRUE, auto_unbox = TRUE)
+  write_json(simple_summary_output, summary_json_path, pretty = TRUE, auto_unbox = TRUE)
   
-  return(summary_stats)
+  return(simple_summary_output) 
 }
 
 
