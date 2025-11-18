@@ -32,11 +32,18 @@ load_and_clean_data <- function(file_path) {
   data_validated <- data %>%
     janitor::clean_names() %>% 
     mutate(
+      funding_year = as.integer(funding_year),
+      contractor_count = as.integer(contractor_count),
+      
       approved_budget_for_contract = as.numeric(approved_budget_for_contract),
       contract_cost = as.numeric(contract_cost),
+      project_latitude = as.numeric(project_latitude),
+      project_longitude = as.numeric(project_longitude),
+      provincial_capital_latitude = as.numeric(provincial_capital_latitude),
+      provincial_capital_longitude = as.numeric(provincial_capital_longitude),
+      
       start_date = as_date(start_date),
       actual_completion_date = as_date(actual_completion_date),
-      
       main_island = case_when(
         region %in% c("NCR", "CAR", "Region I", "Region II", "Region III", "Region IV-A", "Region IV-B", "Region V") ~ "Luzon",
         region %in% c("Region VI", "Region VII", "Region VIII") ~ "Visayas",
@@ -44,21 +51,18 @@ load_and_clean_data <- function(file_path) {
         TRUE ~ "Unknown"
       )
     ) %>%
-    
     drop_na(
       approved_budget_for_contract, contract_cost, start_date, 
-      actual_completion_date, region, contractor, type_of_work, province
+      actual_completion_date, region, contractor, type_of_work, province,
+      funding_year
     )
   
   valid_rows_count <- nrow(data_validated)
   
-  
   data_filtered <- data_validated %>%
-    mutate(funding_year = year(start_date)) %>%
     filter(funding_year %in% c(2021, 2022, 2023))
   
   filtered_rows_count <- nrow(data_filtered)
-  
   
   data_final <- data_filtered %>%
     mutate(
@@ -236,12 +240,9 @@ generate_report3 <- function(data) {
 #' and average delay) and packs them into a clean JSON file for easy viewing.
 #'
 #' @param data The main cleaned project data we're analyzing.
-#' @param report1_data, report2_data, report3_data These are included to match 
-#'        the calling signature from the main script, but they aren't actually 
-#'        used in this simplified version.
 #' @return A list containing the core summary statistics, which also gets saved 
 #'         as a JSON file named \code{summary.json}.
-generate_summary_report <- function(data, report1_data, report2_data, report3_data) {
+generate_summary_report <- function(data) {
   
   total_projects <- nrow(data)
   unique_contractors <- n_distinct(data$contractor)
@@ -274,17 +275,14 @@ generate_summary_report <- function(data, report1_data, report2_data, report3_da
 #' @return Executes the interactive loop; no explicit return value.
 main <- function() {
   
-  # Initialize variables to hold the data and tracking stats
   flood_data <- NULL
   data_loaded <- FALSE
   stats <- NULL
   
-  # Check if the output folder exists, and create it if not
   if (!dir.exists(OUTPUT_DIR)) {
     dir.create(OUTPUT_DIR)
   }
   
-  # Start the interactive loop
   while(TRUE) {
     
     
@@ -321,7 +319,7 @@ main <- function() {
                report2_data <- generate_report2(flood_data)
                report3_data <- generate_report3(flood_data)
                
-               summary_data <- generate_summary_report(flood_data, report1_data, report2_data, report3_data)
+               summary_data <- generate_summary_report(flood_data)
                
                message("\n--- Report Previews ---")
                
