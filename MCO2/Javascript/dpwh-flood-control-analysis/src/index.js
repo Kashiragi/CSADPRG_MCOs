@@ -241,20 +241,12 @@ function displayReport3(report3) {
 }
 
 /**
- * Display Summary Statistics
+ * Display Summary Report
  */
 function displaySummary(summary) {
   console.log('\n\nSummary Stats (summary.json):');
   console.log('='.repeat(80));
-  const stats = {
-    total_projects: summary.data.overview.totalProjects,
-    total_contractors: summary.data.overview.totalContractors,
-    total_provinces: summary.data.overview.totalProvinces,
-    global_avg_delay: summary.data.performance.globalAvgDelayDays.toFixed(2),
-    total_savings: summary.data.financial.totalSavings.toLocaleString(undefined, {maximumFractionDigits: 0}),
-    over_budget_rate: summary.data.financial.overBudgetRate.toFixed(2) + '%'
-  };
-  console.log(JSON.stringify(stats, null, 2));
+  console.log(JSON.stringify(summary.data, null, 2));
 }
 
 /**
