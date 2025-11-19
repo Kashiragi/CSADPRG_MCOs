@@ -2,19 +2,10 @@
 // Run: node src/index.js
 // Orchestrates the data ingestion, processing, and report generation pipeline
 
+// Check and install dependencies BEFORE any other requires
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const readline = require('readline');
-const { clearLog, logInfo, logSection } = require('./services/loggingService');
-const { readData } = require('./ingestion/readData');
-const { validateData } = require('./ingestion/validateData');
-const { cleanData } = require('./ingestion/cleanData');
-const { deriveFields } = require('./ingestion/deriveFields');
-const { generateRegionalEfficiencyReport } = require('./reports/report1_regionalEfficiency');
-const { generateContractorRankingReport } = require('./reports/report2_contractorRanking');
-const { generateCostOverrunTrendsReport } = require('./reports/report3_costOverrunTrends');
-const { generateSummaryReport } = require('./reports/summaryReport');
 
 /**
  * Checks if node_modules exists and installs dependencies if missing
@@ -31,12 +22,29 @@ function checkAndInstallDependencies() {
         stdio: 'inherit' 
       });
       console.log('\n[SUCCESS] Dependencies installed successfully!\n');
+      console.log('[INFO] Please run the script again to start the application.\n');
+      process.exit(0);
     } catch (error) {
       console.error('[ERROR] Failed to install dependencies:', error.message);
       process.exit(1);
     }
   }
 }
+
+// Run dependency check immediately
+checkAndInstallDependencies();
+
+// Now safe to require project modules
+const readline = require('readline');
+const { clearLog, logInfo, logSection } = require('./services/loggingService');
+const { readData } = require('./ingestion/readData');
+const { validateData } = require('./ingestion/validateData');
+const { cleanData } = require('./ingestion/cleanData');
+const { deriveFields } = require('./ingestion/deriveFields');
+const { generateRegionalEfficiencyReport } = require('./reports/report1_regionalEfficiency');
+const { generateContractorRankingReport } = require('./reports/report2_contractorRanking');
+const { generateCostOverrunTrendsReport } = require('./reports/report3_costOverrunTrends');
+const { generateSummaryReport } = require('./reports/summaryReport');
 
 // Global state
 let processedData = null;
@@ -341,9 +349,6 @@ async function main() {
 
 // Run main function if this file is executed directly
 if (require.main === module) {
-  // Check and install dependencies before running
-  checkAndInstallDependencies();
-  
   main()
     .then(() => {
       process.exit(0);
