@@ -2,6 +2,9 @@
 // Run: node src/index.js
 // Orchestrates the data ingestion, processing, and report generation pipeline
 
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
 const readline = require('readline');
 const { clearLog, logInfo, logSection } = require('./services/loggingService');
 const { readData } = require('./ingestion/readData');
@@ -12,6 +15,28 @@ const { generateRegionalEfficiencyReport } = require('./reports/report1_regional
 const { generateContractorRankingReport } = require('./reports/report2_contractorRanking');
 const { generateCostOverrunTrendsReport } = require('./reports/report3_costOverrunTrends');
 const { generateSummaryReport } = require('./reports/summaryReport');
+
+/**
+ * Checks if node_modules exists and installs dependencies if missing
+ */
+function checkAndInstallDependencies() {
+  const projectRoot = path.resolve(__dirname, '..');
+  const nodeModulesPath = path.join(projectRoot, 'node_modules');
+  
+  if (!fs.existsSync(nodeModulesPath)) {
+    console.log('\n[INFO] Dependencies not found. Installing packages...\n');
+    try {
+      execSync('npm install', { 
+        cwd: projectRoot, 
+        stdio: 'inherit' 
+      });
+      console.log('\n[SUCCESS] Dependencies installed successfully!\n');
+    } catch (error) {
+      console.error('[ERROR] Failed to install dependencies:', error.message);
+      process.exit(1);
+    }
+  }
+}
 
 // Global state
 let processedData = null;
@@ -316,6 +341,9 @@ async function main() {
 
 // Run main function if this file is executed directly
 if (require.main === module) {
+  // Check and install dependencies before running
+  checkAndInstallDependencies();
+  
   main()
     .then(() => {
       process.exit(0);
