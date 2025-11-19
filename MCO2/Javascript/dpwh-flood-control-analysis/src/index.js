@@ -22,8 +22,6 @@ function checkAndInstallDependencies() {
         stdio: 'inherit' 
       });
       console.log('\n[SUCCESS] Dependencies installed successfully!\n');
-      console.log('[INFO] Please run the script again to start the application.\n');
-      process.exit(0);
     } catch (error) {
       console.error('[ERROR] Failed to install dependencies:', error.message);
       process.exit(1);
