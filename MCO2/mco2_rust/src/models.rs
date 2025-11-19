@@ -104,9 +104,9 @@ pub struct ContractorRow {
     #[tabled(display = "String::from")]
     pub(crate) contractor: String,
 
-    /// Sum of all cost savings for this contractor
+    /// Total contract cost across projects
     #[tabled(display = "fmt_currency")]
-    pub(crate) total_cost_savings: f64,
+    pub(crate) total_contract_cost: f64,
 
     /// Number of projects attributed to the contractor
     #[tabled(display = "fmt_int")]
@@ -116,9 +116,9 @@ pub struct ContractorRow {
     #[tabled(display = "fmt_flt")]
     pub(crate) avg_delay: f64,
 
-    /// Total contract cost across projects
+    /// Sum of all cost savings for this contractor
     #[tabled(display = "fmt_currency")]
-    pub(crate) total_contract_cost: f64,
+    pub(crate) total_cost_savings: f64,
 
     /// Reliability score (0–100 capped)
     #[tabled(display = "fmt_flt")]
